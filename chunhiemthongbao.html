@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Thông Báo GVCN - Thầy Vũ Tiến Lực</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel (để chạy JSX trực tiếp trên trình duyệt) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Thư viện Xuất ảnh, PDF & Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        @keyframes fade-in-down { 0% { opacity: 0; transform: translateY(-20px); } 100% { opacity: 1; transform: translateY(0); } }
+        @keyframes fade-in { 0% { opacity: 0; transform: scale(0.95); } 100% { opacity: 1; transform: scale(1); } }
+        .animate-fade-in-down { animation: fade-in-down 0.4s ease-out; }
+        .animate-fade-in { animation: fade-in 0.2s ease-out; }
+        
+        /* Tùy chỉnh thanh cuộn đẹp hơn */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #c7c7cc; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // 10 Tiêu đề gợi ý cho tuần mới
+        const TITLE_SUGGESTIONS = [
+            "Khởi Động Tuần Mới Tràn Năng Lượng! 🚀",
+            "Tuần Mới Bứt Phá, Cả Lớp Cùng Tiến! 🌟",
+            "Chào Tuần Mới, Chúc Lớp Mình Luôn Toả Sáng! ✨",
+            "Tuần Mới Gõ Cửa, Thành Công Đang Chờ! 🎯",
+            "Cùng Nhau Cố Gắng Cho Một Tuần Rực Rỡ Nhé! 🌻",
+            "Hành Trình Tuần Mới Bắt Đầu, Vững Bước Nào! 💪",
+            "Một Tuần Mới Đầy Niềm Vui Và Kết Quả Tốt! 🏆",
+            "Khởi Đầu Mới, Quyết Tâm Mới Nào Lớp Mình Ơi! 🔥",
+            "Gửi Năng Lượng Tích Cực Cho Tuần Học Tập Mới! ⚡",
+            "Chúc Tập Thể Lớp Một Tuần Tràn Ngập Tiếng Cười! 😊"
+        ];
+
+        // 10 Bộ Icon Ngẫu nhiên cho 2 góc Song Song
+        const ICON_PAIRS = [
+            { rClass: 'fa-wand-magic-sparkles', mClass: 'fa-bullseye', rColor: 'text-amber-500', mColor: 'text-purple-500', bgR: '🌟', bgM: '🎯' },
+            { rClass: 'fa-star', mClass: 'fa-compass', rColor: 'text-yellow-500', mColor: 'text-blue-500', bgR: '⭐', bgM: '🧭' },
+            { rClass: 'fa-crown', mClass: 'fa-bolt', rColor: 'text-yellow-600', mColor: 'text-orange-500', bgR: '👑', bgM: '⚡' },
+            { rClass: 'fa-medal', mClass: 'fa-flag', rColor: 'text-red-500', mColor: 'text-green-600', bgR: '🥇', bgM: '🚩' },
+            { rClass: 'fa-thumbs-up', mClass: 'fa-lightbulb', rColor: 'text-blue-500', mColor: 'text-yellow-500', bgR: '👍', bgM: '💡' },
+            { rClass: 'fa-heart', mClass: 'fa-anchor', rColor: 'text-pink-500', mColor: 'text-slate-500', bgR: '❤️', bgM: '⚓' },
+            { rClass: 'fa-face-smile', mClass: 'fa-shield-halved', rColor: 'text-orange-500', mColor: 'text-red-500', bgR: '😊', bgM: '🛡️' },
+            { rClass: 'fa-gem', mClass: 'fa-rocket', rColor: 'text-cyan-500', mColor: 'text-indigo-500', bgR: '💎', bgM: '🚀' },
+            { rClass: 'fa-sun', mClass: 'fa-battery-full', rColor: 'text-yellow-500', mColor: 'text-green-500', bgR: '☀️', bgM: '🔋' },
+            { rClass: 'fa-fire', mClass: 'fa-seedling', rColor: 'text-red-500', mColor: 'text-emerald-500', bgR: '🔥', bgM: '🌱' },
+        ];
+
+        const THEMES = {
+            sunflower: { id: 'sunflower', name: 'Hướng Dương', icon: 'fa-sun', bg: 'bg-yellow-50', card: 'bg-white', text: 'text-orange-900', border: 'border-yellow-200', headerBg: 'bg-gradient-to-r from-yellow-300 via-yellow-400 to-orange-400', headerText: 'text-yellow-900', accent: 'bg-yellow-100 text-yellow-800', decorIcon: '🌻', orb1: 'from-yellow-200 to-orange-200', orb2: 'from-orange-100 to-yellow-100' },
+            bluesky: { id: 'bluesky', name: 'Bầu Trời', icon: 'fa-cloud', bg: 'bg-sky-50', card: 'bg-white', text: 'text-sky-900', border: 'border-sky-200', headerBg: 'bg-gradient-to-r from-sky-300 via-blue-300 to-cyan-400', headerText: 'text-sky-900', accent: 'bg-sky-100 text-sky-800', decorIcon: '☁️', orb1: 'from-sky-200 to-blue-200', orb2: 'from-cyan-100 to-sky-100' },
+            spring: { id: 'spring', name: 'Mầm Xanh', icon: 'fa-leaf', bg: 'bg-emerald-50', card: 'bg-white', text: 'text-emerald-900', border: 'border-emerald-200', headerBg: 'bg-gradient-to-r from-emerald-300 via-green-300 to-teal-400', headerText: 'text-emerald-900', accent: 'bg-emerald-100 text-emerald-800', decorIcon: '🌱', orb1: 'from-emerald-200 to-green-200', orb2: 'from-teal-100 to-emerald-100' },
+            pastel: { id: 'pastel', name: 'Yêu Thương', icon: 'fa-heart', bg: 'bg-pink-50', card: 'bg-white', text: 'text-pink-900', border: 'border-pink-200', headerBg: 'bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-300', headerText: 'text-purple-900', accent: 'bg-pink-100 text-pink-800', decorIcon: '🌸', orb1: 'from-pink-200 to-purple-200', orb2: 'from-indigo-100 to-pink-100' },
+            ocean: { id: 'ocean', name: 'Đại Dương', icon: 'fa-water', bg: 'bg-blue-50', card: 'bg-white', text: 'text-blue-900', border: 'border-blue-200', headerBg: 'bg-gradient-to-r from-blue-400 via-blue-500 to-indigo-500', headerText: 'text-white', accent: 'bg-blue-100 text-blue-800', decorIcon: '🌊', orb1: 'from-blue-300 to-indigo-300', orb2: 'from-cyan-200 to-blue-200' },
+            sunset: { id: 'sunset', name: 'Hoàng Hôn', icon: 'fa-cloud-sun', bg: 'bg-orange-50', card: 'bg-white', text: 'text-orange-900', border: 'border-orange-200', headerBg: 'bg-gradient-to-r from-orange-400 via-red-400 to-pink-500', headerText: 'text-white', accent: 'bg-orange-100 text-orange-800', decorIcon: '🌅', orb1: 'from-orange-300 to-red-300', orb2: 'from-pink-200 to-orange-200' },
+            forest: { id: 'forest', name: 'Rừng Xanh', icon: 'fa-tree', bg: 'bg-green-50', card: 'bg-white', text: 'text-green-900', border: 'border-green-200', headerBg: 'bg-gradient-to-r from-green-500 via-green-600 to-emerald-700', headerText: 'text-white', accent: 'bg-green-100 text-green-800', decorIcon: '🌲', orb1: 'from-green-300 to-emerald-300', orb2: 'from-teal-200 to-green-200' },
+            galaxy: { id: 'galaxy', name: 'Vũ Trụ', icon: 'fa-meteor', bg: 'bg-slate-100', card: 'bg-white', text: 'text-slate-800', border: 'border-indigo-200', headerBg: 'bg-gradient-to-r from-indigo-800 via-purple-800 to-slate-900', headerText: 'text-white', accent: 'bg-indigo-100 text-indigo-800', decorIcon: '🌌', orb1: 'from-indigo-300 to-purple-300', orb2: 'from-slate-300 to-indigo-200' },
+            coffee: { id: 'coffee', name: 'Cà Phê', icon: 'fa-mug-hot', bg: 'bg-stone-100', card: 'bg-white', text: 'text-stone-900', border: 'border-stone-200', headerBg: 'bg-gradient-to-r from-stone-400 via-stone-500 to-amber-700', headerText: 'text-white', accent: 'bg-stone-200 text-stone-800', decorIcon: '☕', orb1: 'from-stone-300 to-amber-200', orb2: 'from-amber-100 to-stone-200' }
+        };
+
+        const SUGGESTIONS = {
+            weekly: [
+                { label: 'Kế hoạch tuần', title: TITLE_SUGGESTIONS[0], weekPeriod: 'Tuần 12 (Từ 20/11 đến 26/11)', weekData: { rewards: '• Tuyên dương tổ 1 trực nhật rất sạch sẽ.\n• Khen ngợi bạn [Tên] tiến bộ môn Toán.', reminders: '• Tuần này cố gắng đi học sớm hơn 5 phút nhé!', study: '• Chuẩn bị tốt bài kiểm tra 15p Văn.', discipline: '• 100% mặc đồng phục đúng quy định.', activity: '• Đăng ký văn nghệ 20/11 (Hạn chót thứ 4).', important: 'Sáng Chủ Nhật có họp Phụ huynh giữa kỳ.' } },
+                { label: 'Tổng kết tuần', title: 'Nhìn Lại Một Tuần Tuyệt Vời Của Lớp Mình! 🌼', weekPeriod: 'Tổng kết Tuần 11', weekData: { rewards: '• 🌟 Ngôi sao của tuần: [Tên], [Tên].', reminders: '• Vài bạn thỉnh thoảng quên thẻ học sinh.', study: '• Tinh thần học tập tuần này rất sôi nổi.', discipline: '• Sĩ số duy trì tốt. Không đi trễ!', activity: '• Cảm ơn tinh thần cổ vũ trận bóng đá.', important: 'Tuần tới ôn thi trọng điểm, cố lên nhé!' } }
+            ],
+            study: [
+                { label: 'Động viên ôn thi', title: '🌟 Cố lên những chiến binh!', content: 'Góc nhỏ gửi các thành viên yêu quý của lớp mình! 🌻\n\nChỉ còn vài ngày nữa là bước vào kỳ thi quan trọng rồi. Thầy biết các em đang rất vất vả, nhưng hãy cố gắng thêm một chút nữa nhé.\nChúc cả lớp ôn tập thật tốt! ❤️' }
+            ],
+            activity: [
+                { label: 'Kêu gọi phong trào', title: '🏆 Cháy hết mình cùng Hội thao!', content: 'Loa loa loa! 📣 Đại hội thể thao của trường sắp diễn ra!\nLớp mình vốn nổi tiếng nhiệt huyết, ai tham gia thì nhanh tay đăng ký nhé! Quyết thắng! 🔥😎' }
+            ],
+            discipline: [
+                { label: 'Nhắc đi muộn', title: '⏰ Góc gửi gắm những "bé lười" ngủ nướng', content: 'Gửi mấy trùm ngủ nướng của lớp mình! 🐢\nSáng nay thầy thấy vài cái tên quen thuộc đi muộn rồi nha. Từ ngày mai hứa đặt báo thức sớm hơn 5 phút để không bị trừ điểm oan nhé. Yêu thương! 💛' }
+            ]
+        };
+
+        function App() {
+            const [currentTheme, setCurrentTheme] = useState('sunflower');
+            const [currentTab, setCurrentTab] = useState('weekly');
+            
+            // Trạng thái chung
+            const [schoolName, setSchoolName] = useState('THPT Nguyễn Hữu Cảnh');
+            const [className, setClassName] = useState('Lớp 10A1');
+            const [title, setTitle] = useState('');
+            const [signature, setSignature] = useState('GVCN Vũ Tiến Lực');
+            const [content, setContent] = useState('');
+            
+            // Icon ngẫu nhiên
+            const [iconPairIndex, setIconPairIndex] = useState(0);
+
+            // Trạng thái cho tab Tuần
+            const [weekPeriod, setWeekPeriod] = useState('');
+            const [weekData, setWeekData] = useState({ 
+                rewards: '', reminders: '', study: '', discipline: '', activity: '', important: '' 
+            });
+            
+            const [toastMessage, setToastMessage] = useState({ show: false, text: '', type: 'success' });
+            const [isExportingImage, setIsExportingImage] = useState(false);
+            const [isExportingPDF, setIsExportingPDF] = useState(false);
+            
+            // Trạng thái lưu trữ
+            const [savedRecords, setSavedRecords] = useState([]);
+            const [showHistoryModal, setShowHistoryModal] = useState(false);
+            const [expandedTreeGroups, setExpandedTreeGroups] = useState([]);
+
+            // Trạng thái Tabs cho giao diện Điện thoại
+            const [mobileTab, setMobileTab] = useState('edit');
+
+            const fileInputRef = useRef(null);
+
+            useEffect(() => {
+                const saved = localStorage.getItem('thongbao_saved_luc');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    setSavedRecords(parsed);
+                    const groups = [...new Set(parsed.map(r => r.weekPeriod || 'Chưa phân loại'))];
+                    setExpandedTreeGroups(groups);
+                }
+            }, []);
+
+            const theme = THEMES[currentTheme];
+            const CurrentIconPair = ICON_PAIRS[iconPairIndex];
+
+            const showToast = (text, type = 'success') => {
+                setToastMessage({ show: true, text, type });
+                setTimeout(() => setToastMessage({ show: false, text: '', type: 'success' }), 3000);
+            };
+
+            const handleRandomizeIcons = () => {
+                const nextIndex = Math.floor(Math.random() * ICON_PAIRS.length);
+                setIconPairIndex(nextIndex);
+            };
+
+            const handleTextareaKeyDown = (e, setter, currentValue) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const start = e.target.selectionStart;
+                    const end = e.target.selectionEnd;
+                    const textBefore = currentValue.substring(0, start);
+                    const textAfter = currentValue.substring(end);
+                    const lines = textBefore.split('\n');
+                    const lastLine = lines[lines.length - 1];
+
+                    let newText, newCursorPos;
+                    if (lastLine.trim() === '•') {
+                        lines.pop();
+                        const newTextBefore = lines.join('\n') + (lines.length > 0 ? '\n' : '');
+                        newText = newTextBefore + '\n' + textAfter;
+                        newCursorPos = newTextBefore.length + 1; 
+                    } else {
+                        newText = textBefore + '\n• ' + textAfter;
+                        newCursorPos = start + 3; 
+                    }
+
+                    setter(newText);
+                    setTimeout(() => { e.target.selectionStart = e.target.selectionEnd = newCursorPos; }, 0);
+                }
+            };
+
+            const handleWeekDataKeyDown = (e, field) => {
+                handleTextareaKeyDown(e, (val) => setWeekData(prev => ({...prev, [field]: val})), weekData[field]);
+            };
+
+            const handleApplySuggestion = (suggestion) => {
+                setTitle(suggestion.title);
+                if (currentTab === 'weekly') {
+                    setWeekPeriod(suggestion.weekPeriod || '');
+                    setWeekData(suggestion.weekData || { rewards: '', reminders: '', study: '', activity: '', discipline: '', important: '' });
+                } else {
+                    setContent(suggestion.content);
+                }
+            };
+
+            const handleSaveRecord = () => {
+                if (!title && !weekPeriod) {
+                    showToast('Vui lòng nhập ít nhất Tiêu đề hoặc Thời gian tuần để lưu!', 'error'); return;
+                }
+                const newRecord = {
+                    id: Date.now(),
+                    dateSaved: new Date().toLocaleString('vi-VN'),
+                    schoolName, className, title, signature, currentTab, currentTheme, iconPairIndex,
+                    weekPeriod: weekPeriod || 'Chưa phân loại', weekData, content
+                };
+                const updated = [newRecord, ...savedRecords];
+                setSavedRecords(updated);
+                localStorage.setItem('thongbao_saved_luc', JSON.stringify(updated));
+                
+                if (!expandedTreeGroups.includes(newRecord.weekPeriod)) {
+                    setExpandedTreeGroups(prev => [...prev, newRecord.weekPeriod]);
+                }
+                showToast('Đã lưu thông báo thành công!');
+            };
+
+            const loadRecord = (record) => {
+                setSchoolName(record.schoolName || 'THPT Nguyễn Hữu Cảnh');
+                setClassName(record.className || 'Lớp 10A1');
+                setTitle(record.title);
+                setSignature(record.signature);
+                setCurrentTab(record.currentTab);
+                setCurrentTheme(record.currentTheme);
+                setIconPairIndex(record.iconPairIndex || 0);
+                setWeekPeriod(record.weekPeriod !== 'Chưa phân loại' ? record.weekPeriod : '');
+                setWeekData(record.weekData || { rewards: '', reminders: '', study: '', activity: '', discipline: '', important: '' });
+                setContent(record.content || '');
+                setShowHistoryModal(false);
+                setMobileTab('edit'); // Chuyển sang tab edit sau khi load
+                showToast('Đã nạp lại thông báo cũ!');
+            };
+
+            const deleteRecord = (id) => {
+                const updated = savedRecords.filter(r => r.id !== id);
+                setSavedRecords(updated);
+                localStorage.setItem('thongbao_saved_luc', JSON.stringify(updated));
+            };
+
+            const groupedRecords = savedRecords.reduce((acc, rec) => {
+                const key = rec.weekPeriod || 'Chưa phân loại';
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(rec);
+                return acc;
+            }, {});
+
+            const toggleTreeGroup = (groupName) => {
+                setExpandedTreeGroups(prev => prev.includes(groupName) ? prev.filter(g => g !== groupName) : [...prev, groupName]);
+            };
+
+            // ---- XỬ LÝ EXCEL ----
+            const handleDownloadSampleExcel = () => {
+                const ws = XLSX.utils.json_to_sheet([{
+                    "TieuDe": "Khởi Động Tuần Mới Tràn Năng Lượng! 🚀",
+                    "ThoiGian": "Tuần 12 (Từ 20/11 đến 26/11)",
+                    "TuyenDuong": "• Tuyên dương tổ 1...\n• Khen ngợi bạn...",
+                    "CoGang": "• Tuần này cố gắng đi học sớm hơn nhé!",
+                    "HocTap": "• Chuẩn bị tốt bài 15p môn Văn...",
+                    "NeNep": "• 100% đồng phục đúng quy định...",
+                    "PhongTrao": "• Đăng ký tham gia văn nghệ...",
+                    "QuanTrong": "Sáng Chủ Nhật có họp Phụ huynh..."
+                }]);
+                
+                // Chỉnh kích thước cột cho đẹp
+                ws['!cols'] = [{wch:30}, {wch:25}, {wch:35}, {wch:35}, {wch:35}, {wch:35}, {wch:35}, {wch:35}];
+                
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Mau_ThongBao_GVCN");
+                XLSX.writeFile(wb, "Mau_ThongBao_GVCN.xlsx");
+            };
+
+            const handleFileExcelChange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    try {
+                        const bstr = evt.target.result;
+                        const wb = XLSX.read(bstr, { type: 'binary' });
+                        const wsname = wb.SheetNames[0];
+                        const ws = wb.Sheets[wsname];
+                        const data = XLSX.utils.sheet_to_json(ws);
+                        
+                        if (data && data.length > 0) {
+                            const row = data[0]; // Lấy dòng dữ liệu đầu tiên
+                            if (row.TieuDe) setTitle(row.TieuDe);
+                            if (row.ThoiGian) setWeekPeriod(row.ThoiGian);
+                            setWeekData({
+                                rewards: row.TuyenDuong || '',
+                                reminders: row.CoGang || '',
+                                study: row.HocTap || '',
+                                discipline: row.NeNep || '',
+                                activity: row.PhongTrao || '',
+                                important: row.QuanTrong || ''
+                            });
+                            setCurrentTab('weekly'); // Chuyển sang tab Tuần
+                            showToast('Nhập dữ liệu Excel thành công!');
+                        } else {
+                            showToast('File Excel trống hoặc không đúng định dạng!', 'error');
+                        }
+                    } catch (error) {
+                        showToast('Lỗi đọc file Excel!', 'error');
+                        console.error(error);
+                    }
+                };
+                reader.readAsBinaryString(file);
+                // Reset input để có thể chọn lại file cũ
+                e.target.value = null; 
+            };
+
+            // ---- XUẤT ẢNH & PDF ----
+            const handleExportImage = async () => {
+                setIsExportingImage(true);
+                const element = document.getElementById('preview-card');
+                try {
+                    const canvas = await window.html2canvas(element, { scale: 2, useCORS: true, backgroundColor: null });
+                    const link = document.createElement('a');
+                    link.download = `ThongBao_${new Date().getTime()}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    showToast('Đã tải ảnh PNG thành công!');
+                } catch (err) { showToast('Lỗi tạo ảnh. Vui lòng thử lại.', 'error'); } 
+                finally { setIsExportingImage(false); }
+            };
+
+            const handleExportPDF = async () => {
+                setIsExportingPDF(true);
+                const element = document.getElementById('preview-card');
+                try {
+                    const canvas = await window.html2canvas(element, { scale: 2, useCORS: true });
+                    const imgData = canvas.toDataURL('image/png');
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                    pdf.save(`ThongBao_${new Date().getTime()}.pdf`);
+                    showToast('Đã tải PDF thành công!');
+                } catch (err) { showToast('Lỗi tạo PDF. Vui lòng thử lại.', 'error'); } 
+                finally { setIsExportingPDF(false); }
+            };
+
+            return (
+                <div className={`min-h-screen ${theme.bg} p-3 md:p-6 pb-24 lg:pb-6 font-sans transition-colors duration-700 relative overflow-hidden`}>
+                    {/* KHUNG NỀN PHỤ HOẠ */}
+                    <div className="fixed inset-0 z-0 pointer-events-none opacity-40 transition-all duration-1000">
+                        <div className={`absolute -top-20 -left-20 w-96 h-96 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 bg-gradient-to-tr ${theme.orb1}`}></div>
+                        <div className={`absolute top-1/2 right-0 w-[30rem] h-[30rem] rounded-full mix-blend-multiply filter blur-[120px] opacity-60 bg-gradient-to-bl ${theme.orb2}`}></div>
+                    </div>
+
+                    {/* Toast Notification */}
+                    {toastMessage.show && (
+                        <div className="fixed top-4 right-4 z-50 animate-fade-in-down">
+                            <div className={`px-6 py-3 rounded-xl shadow-xl flex items-center gap-2 text-white font-medium ${toastMessage.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
+                                <i className={`fa-solid ${toastMessage.type === 'success' ? 'fa-check' : 'fa-circle-exclamation'} text-lg`}></i>
+                                {toastMessage.text}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Modal Lịch Sử */}
+                    {showHistoryModal && (
+                        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+                            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden animate-fade-in">
+                                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                                    <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2"><i className="fa-solid fa-clock-rotate-left text-indigo-500"></i> Lịch sử thông báo</h3>
+                                    <button onClick={() => setShowHistoryModal(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors"><i className="fa-solid fa-xmark"></i></button>
+                                </div>
+                                <div className="p-5 overflow-y-auto flex-1 bg-slate-50">
+                                    {Object.keys(groupedRecords).length === 0 ? (
+                                        <div className="text-center text-gray-400 py-10">Chưa có thông báo nào được lưu.</div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {Object.entries(groupedRecords).map(([week, records]) => (
+                                                <div key={week} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                                    <button onClick={() => toggleTreeGroup(week)} className="w-full flex justify-between items-center p-3.5 bg-gray-50 hover:bg-gray-100 transition-colors">
+                                                        <span className="font-bold text-gray-700 flex items-center gap-2">
+                                                            <i className="fa-solid fa-folder-tree text-indigo-500"></i> {week} 
+                                                            <span className="text-xs font-normal bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">{records.length} phiếu</span>
+                                                        </span>
+                                                        <i className={`fa-solid ${expandedTreeGroups.includes(week) ? 'fa-chevron-down' : 'fa-chevron-right'} text-gray-400`}></i>
+                                                    </button>
+                                                    
+                                                    {expandedTreeGroups.includes(week) && (
+                                                        <div className="p-2 space-y-2 border-t border-gray-100">
+                                                            {records.map(record => (
+                                                                <div key={record.id} className="flex justify-between items-center p-3 rounded-lg border border-transparent hover:border-indigo-200 hover:bg-indigo-50/30 transition-all group">
+                                                                    <div className="cursor-pointer flex-1" onClick={() => loadRecord(record)}>
+                                                                        <h4 className="font-semibold text-gray-800 mb-0.5 text-sm">{record.title || '(Không có tiêu đề)'}</h4>
+                                                                        <div className="flex gap-3 text-xs text-gray-500">
+                                                                            <span className="flex items-center gap-1"><i className="fa-solid fa-calendar-days"></i> {record.dateSaved}</span>
+                                                                            <span className="flex items-center gap-1"><i className={`fa-solid ${THEMES[record.currentTheme]?.icon}`}></i> {THEMES[record.currentTheme]?.name}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <button onClick={() => deleteRecord(record.id)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100" title="Xóa"><i className="fa-solid fa-trash-can"></i></button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* NỘI DUNG CHÍNH */}
+                    <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-10">
+                        
+                        {/* LEFT COLUMN - EDITOR (Hiển thị dựa theo Mobile Tab) */}
+                        <div className={`flex-col gap-5 ${mobileTab === 'edit' ? 'flex' : 'hidden'} lg:flex`}>
+                            <div className="bg-white/90 backdrop-blur-md p-5 rounded-[2rem] shadow-lg border border-white/40">
+                                <div className="flex justify-between items-center mb-5">
+                                    <h1 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2">
+                                        <i className="fa-solid fa-pen-to-square text-indigo-500"></i> Soạn Thông Báo
+                                    </h1>
+                                    <button onClick={() => setShowHistoryModal(true)} className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-full text-sm font-semibold transition-colors">
+                                        <i className="fa-solid fa-clock-rotate-left"></i> Lịch sử
+                                    </button>
+                                </div>
+
+                                {/* THÔNG TIN CHUNG */}
+                                <div className="grid grid-cols-2 gap-3 mb-5">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-600 mb-1 flex items-center gap-1"><i className="fa-solid fa-school"></i> Tên trường</label>
+                                        <input type="text" value={schoolName} onChange={(e) => setSchoolName(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none transition-all shadow-sm bg-white text-base lg:text-sm" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-600 mb-1 flex items-center gap-1"><i className="fa-solid fa-users"></i> Tên lớp</label>
+                                        <input type="text" value={className} onChange={(e) => setClassName(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none transition-all shadow-sm bg-white text-base lg:text-sm" />
+                                    </div>
+                                </div>
+
+                                {/* THEME SELECTION */}
+                                <div className="mb-5">
+                                    <label className="block text-xs font-semibold text-gray-600 mb-2">1. Giao diện màu sắc</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {Object.values(THEMES).map((t) => (
+                                            <button key={t.id} onClick={() => setCurrentTheme(t.id)} className={`flex items-center gap-1.5 px-4 py-2 lg:px-3 lg:py-1.5 rounded-full border text-sm lg:text-xs transition-all duration-300 ${currentTheme === t.id ? `${t.accent} border-transparent shadow-md ring-2 ring-offset-1 ring-opacity-50 font-medium scale-105` : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200 hover:scale-105'}`}>
+                                                <i className={`fa-solid ${t.icon}`}></i> {t.name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* CATEGORY & SUGGESTIONS */}
+                                <div className="mb-5">
+                                    <div className="flex flex-col sm:flex-row justify-between sm:items-end gap-2 mb-2">
+                                        <label className="block text-xs font-semibold text-gray-600">2. Chủ đề soạn thảo</label>
+                                        
+                                        {/* Nút Excel cho Tab Tuần */}
+                                        {currentTab === 'weekly' && (
+                                            <div className="flex gap-2">
+                                                <button onClick={handleDownloadSampleExcel} className="text-[11px] font-medium text-green-700 bg-green-50 border border-green-200 hover:bg-green-100 px-3 py-1.5 rounded-md transition-colors flex items-center gap-1">
+                                                    <i className="fa-solid fa-download"></i> Tải mẫu Excel
+                                                </button>
+                                                <button onClick={() => fileInputRef.current.click()} className="text-[11px] font-medium text-white bg-green-600 hover:bg-green-700 px-3 py-1.5 rounded-md transition-colors shadow-sm flex items-center gap-1">
+                                                    <i className="fa-solid fa-file-excel"></i> Nhập từ Excel
+                                                </button>
+                                                <input type="file" ref={fileInputRef} onChange={handleFileExcelChange} accept=".xlsx, .xls" className="hidden" />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="flex flex-wrap border-b border-gray-200 mb-3">
+                                        {[
+                                            { id: 'weekly', icon: 'fa-calendar-days', label: 'Tuần' },
+                                            { id: 'study', icon: 'fa-book-open', label: 'Học tập' },
+                                            { id: 'activity', icon: 'fa-trophy', label: 'Phong trào' },
+                                            { id: 'discipline', icon: 'fa-circle-exclamation', label: 'Nề nếp' }
+                                        ].map((tab) => (
+                                            <button key={tab.id} onClick={() => setCurrentTab(tab.id)} className={`flex-1 min-w-[70px] flex items-center justify-center gap-1.5 py-3 lg:py-2.5 text-sm lg:text-xs font-medium border-b-2 transition-colors ${currentTab === tab.id ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>
+                                                <i className={`fa-solid ${tab.icon}`}></i> {tab.label}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <div className="flex flex-wrap gap-2">
+                                        {SUGGESTIONS[currentTab].map((sug, idx) => (
+                                            <button key={idx} onClick={() => handleApplySuggestion(sug)} className="px-3 py-1.5 bg-gray-100 hover:bg-indigo-50 text-gray-700 hover:text-indigo-700 rounded-lg text-sm lg:text-xs transition-colors border border-gray-200 hover:border-indigo-200">
+                                                {sug.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* INPUTS THEO THỨ TỰ TÂM LÝ HỌC GIÁO DỤC TÍCH CỰC */}
+                                <div className="space-y-4 lg:space-y-3">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-600 mb-1 flex justify-between">
+                                            Tiêu đề thông báo
+                                        </label>
+                                        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Nhập tiêu đề truyền cảm hứng..." className="w-full px-4 py-3 lg:px-3 lg:py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none transition-all font-medium text-indigo-900 text-base lg:text-sm mb-2" />
+                                        
+                                        {/* Dropdown 10 Tiêu đề Gợi ý */}
+                                        {currentTab === 'weekly' && (
+                                            <select 
+                                                onChange={(e) => setTitle(e.target.value)} 
+                                                className="w-full text-base lg:text-sm text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2 outline-none cursor-pointer hover:bg-indigo-100 transition-colors"
+                                                defaultValue=""
+                                            >
+                                                <option value="" disabled>💡 Chọn nhanh 10 mẫu tiêu đề tích cực cho tuần mới...</option>
+                                                {TITLE_SUGGESTIONS.map((sug, i) => (
+                                                    <option key={i} value={sug}>{sug}</option>
+                                                ))}
+                                            </select>
+                                        )}
+                                    </div>
+
+                                    {currentTab === 'weekly' ? (
+                                        <div className="space-y-4 lg:space-y-3 border border-indigo-100 bg-indigo-50/50 p-4 rounded-2xl">
+                                            <div className="mb-2">
+                                                <label className="block text-xs font-semibold text-indigo-800 mb-1 flex items-center gap-1"><i className="fa-solid fa-calendar-days"></i> Thời gian</label>
+                                                <input type="text" value={weekPeriod} onChange={(e) => setWeekPeriod(e.target.value)} placeholder="VD: Tuần 12 (Từ 20/11 đến 26/11)" className="w-full px-4 py-3 lg:px-3 lg:py-2 border border-white rounded-xl focus:ring-2 focus:ring-indigo-400 shadow-sm outline-none transition-all text-base lg:text-sm" />
+                                            </div>
+
+                                            {/* Hai góc tích cực Song Song */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                <div className="col-span-1 md:col-span-2 flex justify-between items-center mb-[-4px]">
+                                                    <span className="text-xs font-semibold text-gray-500">Các góc Tích cực:</span>
+                                                    <button onClick={handleRandomizeIcons} className="flex items-center gap-1 text-[11px] font-medium bg-white border border-gray-200 px-2 py-1 rounded-md text-indigo-600 hover:bg-indigo-50 shadow-sm transition-all"><i className="fa-solid fa-shuffle"></i> Đổi Icon góc</button>
+                                                </div>
+                                                <div className="bg-amber-50 p-3 lg:p-2.5 rounded-xl border border-amber-200">
+                                                    <label className="block text-xs font-bold text-amber-700 mb-1 flex items-center gap-1">
+                                                        <i className={`fa-solid ${CurrentIconPair.rClass}`}></i> Góc Tuyên Dương
+                                                    </label>
+                                                    <textarea value={weekData.rewards} onChange={(e) => setWeekData({...weekData, rewards: e.target.value})} onKeyDown={(e) => handleWeekDataKeyDown(e, 'rewards')} rows="2" placeholder="Ghi nhận thành tích... (Ấn Enter)" className="w-full px-3 py-2 lg:px-2.5 lg:py-1.5 border-0 rounded-lg focus:ring-2 focus:ring-amber-400 bg-white/70 outline-none resize-none text-base lg:text-xs"></textarea>
+                                                </div>
+
+                                                <div className="bg-purple-50 p-3 lg:p-2.5 rounded-xl border border-purple-200">
+                                                    <label className="block text-xs font-bold text-purple-700 mb-1 flex items-center gap-1">
+                                                        <i className={`fa-solid ${CurrentIconPair.mClass}`}></i> Góc Cố Gắng
+                                                    </label>
+                                                    <textarea value={weekData.reminders} onChange={(e) => setWeekData({...weekData, reminders: e.target.value})} onKeyDown={(e) => handleWeekDataKeyDown(e, 'reminders')} rows="2" placeholder="Nhắc nhở khích lệ... (Ấn Enter)" className="w-full px-3 py-2 lg:px-2.5 lg:py-1.5 border-0 rounded-lg focus:ring-2 focus:ring-purple-400 bg-white/70 outline-none resize-none text-base lg:text-xs"></textarea>
+                                                </div>
+                                            </div>
+
+                                            <div className="pt-2 lg:pt-1 border-t border-indigo-100/50">
+                                                <label className="block text-xs font-semibold text-blue-700 mb-1 flex items-center gap-1"><i className="fa-solid fa-book-open"></i> Học tập</label>
+                                                <textarea value={weekData.study} onChange={(e) => setWeekData({...weekData, study: e.target.value})} onKeyDown={(e) => handleWeekDataKeyDown(e, 'study')} rows="2" placeholder="Gõ nội dung, ấn Enter để tự tạo (•)..." className="w-full px-4 py-3 lg:px-3 lg:py-1.5 border border-white rounded-xl focus:ring-2 focus:ring-blue-400 shadow-sm outline-none resize-none text-base lg:text-sm"></textarea>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-semibold text-emerald-700 mb-1 flex items-center gap-1"><i className="fa-solid fa-shield"></i> Nề nếp</label>
+                                                <textarea value={weekData.discipline} onChange={(e) => setWeekData({...weekData, discipline: e.target.value})} onKeyDown={(e) => handleWeekDataKeyDown(e, 'discipline')} rows="2" placeholder="Gõ nội dung, ấn Enter để tự tạo (•)..." className="w-full px-4 py-3 lg:px-3 lg:py-1.5 border border-white rounded-xl focus:ring-2 focus:ring-emerald-400 shadow-sm outline-none resize-none text-base lg:text-sm"></textarea>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-semibold text-orange-700 mb-1 flex items-center gap-1"><i className="fa-solid fa-trophy"></i> Phong trào</label>
+                                                <textarea value={weekData.activity} onChange={(e) => setWeekData({...weekData, activity: e.target.value})} onKeyDown={(e) => handleWeekDataKeyDown(e, 'activity')} rows="2" placeholder="Gõ nội dung, ấn Enter để tự tạo (•)..." className="w-full px-4 py-3 lg:px-3 lg:py-1.5 border border-white rounded-xl focus:ring-2 focus:ring-orange-400 shadow-sm outline-none resize-none text-base lg:text-sm"></textarea>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-semibold text-rose-700 mb-1 flex items-center gap-1"><i className="fa-solid fa-bell"></i> Thông báo quan trọng</label>
+                                                <textarea value={weekData.important} onChange={(e) => setWeekData({...weekData, important: e.target.value})} onKeyDown={(e) => handleWeekDataKeyDown(e, 'important')} rows="2" placeholder="Gõ nội dung, ấn Enter để tự tạo (•)..." className="w-full px-4 py-3 lg:px-3 lg:py-1.5 border border-white rounded-xl focus:ring-2 focus:ring-rose-400 shadow-sm outline-none resize-none text-base lg:text-sm"></textarea>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-600 mb-1 flex justify-between">Nội dung <span className="text-[10px] opacity-70">Ấn Enter để tự tạo Bullet (•)</span></label>
+                                            <textarea value={content} onChange={(e) => setContent(e.target.value)} onKeyDown={(e) => handleTextareaKeyDown(e, setContent, content)} rows="6" placeholder="Nhập nội dung nhắc nhở..." className="w-full px-4 py-3 lg:px-3 lg:py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none transition-all resize-none shadow-sm text-base lg:text-sm"></textarea>
+                                        </div>
+                                    )}
+
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-600 mb-1">Ký tên</label>
+                                        <input type="text" value={signature} onChange={(e) => setSignature(e.target.value)} className="w-full px-4 py-3 lg:px-3 lg:py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-400 focus:border-transparent outline-none transition-all shadow-sm text-base lg:text-sm" />
+                                    </div>
+
+                                    {/* LƯU THÔNG BÁO BUTTON */}
+                                    <div className="pt-3 flex justify-end">
+                                        <button onClick={handleSaveRecord} className="w-full md:w-auto flex justify-center items-center gap-2 px-6 py-3 bg-gray-800 text-white hover:bg-gray-900 rounded-xl text-sm font-semibold shadow-md transition-all hover:shadow-lg">
+                                            <i className="fa-solid fa-floppy-disk"></i> Lưu Phiếu
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* RIGHT COLUMN - PREVIEW (Hiển thị dựa theo Mobile Tab) */}
+                        <div className={`flex-col gap-3 ${mobileTab === 'preview' ? 'flex' : 'hidden'} lg:flex`}>
+                            <div className="flex flex-wrap items-center justify-between px-2 gap-3">
+                                <span className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center gap-1.5">
+                                    <i className="fa-solid fa-image"></i> Bản xem trước
+                                </span>
+                                <div className="flex gap-2 w-full sm:w-auto">
+                                    <button onClick={handleExportImage} disabled={isExportingImage || isExportingPDF} className="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-4 py-2.5 lg:px-3 lg:py-2 rounded-xl text-sm lg:text-xs font-bold transition-all text-white shadow-md bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg hover:-translate-y-0.5">
+                                        {isExportingImage ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-image"></i>}
+                                        {isExportingImage ? 'Đang tạo...' : 'Tải Ảnh'}
+                                    </button>
+                                    <button onClick={handleExportPDF} disabled={isExportingImage || isExportingPDF} className="flex-1 sm:flex-none justify-center flex items-center gap-1.5 px-4 py-2.5 lg:px-3 lg:py-2 rounded-xl text-sm lg:text-xs font-bold transition-all text-white shadow-md bg-rose-600 hover:bg-rose-700 hover:shadow-lg hover:-translate-y-0.5">
+                                        {isExportingPDF ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-file-pdf"></i>}
+                                        {isExportingPDF ? 'Đang tạo...' : 'Tải PDF'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* THE NOTIFICATION CARD (COMPACT LAYOUT) */}
+                            <div id="preview-card" className={`relative overflow-hidden rounded-[1.5rem] shadow-xl border-4 border-white ${theme.card} transition-all duration-700 transform`}>
+                                {/* Header / Banner */}
+                                <div className={`${theme.headerBg} px-6 py-5 relative overflow-hidden`}>
+                                    <div className="absolute -top-4 -right-4 text-5xl opacity-20 pointer-events-none select-none transition-transform duration-700 hover:scale-110 hover:rotate-12">{theme.decorIcon}</div>
+                                    <div className="absolute -bottom-6 left-1/4 text-4xl opacity-20 pointer-events-none select-none">{theme.decorIcon}</div>
+                                    
+                                    <div className="relative z-10 flex justify-between items-start mb-4 font-semibold text-white/90 drop-shadow-sm">
+                                        {schoolName && (
+                                            <div className="flex items-center gap-1.5 bg-black/10 backdrop-blur-md px-2.5 py-1 rounded-lg text-xs">
+                                                <i className="fa-solid fa-school"></i> {schoolName}
+                                            </div>
+                                        )}
+                                        {className && (
+                                            <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs border border-white/30 shadow-sm">
+                                                <i className="fa-solid fa-users"></i> {className}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <h2 className={`relative z-10 text-xl md:text-2xl font-extrabold ${theme.headerText} leading-tight drop-shadow-sm`}>
+                                        {title || 'Tiêu đề thông báo...'}
+                                    </h2>
+                                    
+                                    {currentTab === 'weekly' && weekPeriod && (
+                                        <div className={`relative z-10 mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/40 backdrop-blur-md shadow-sm ${theme.headerText} text-xs font-bold tracking-wide`}>
+                                            <i className="fa-solid fa-calendar-days"></i> {weekPeriod}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Body */}
+                                <div className="p-6 md:p-7">
+                                    {currentTab === 'weekly' ? (
+                                        <div className="space-y-4">
+                                            {!weekData.study && !weekData.activity && !weekData.discipline && !weekData.important && !weekData.rewards && !weekData.reminders && (
+                                                <div className="text-center py-6 opacity-50">
+                                                    <div className="text-3xl mb-2">{theme.decorIcon}</div><span className="italic text-sm">Nội dung tuần sẽ hiển thị ở đây...</span>
+                                                </div>
+                                            )}
+
+                                            {(weekData.rewards || weekData.reminders) && (
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-1">
+                                                    {weekData.rewards && (
+                                                        <div className="bg-gradient-to-b from-amber-50 to-white p-3.5 rounded-2xl border border-amber-200 shadow-sm h-full relative overflow-hidden">
+                                                            <div className="absolute -right-1 -bottom-1 text-3xl opacity-10">{CurrentIconPair.bgR}</div>
+                                                            <h3 className={`font-extrabold ${CurrentIconPair.rColor} flex items-center gap-1.5 mb-1.5 uppercase text-[11px] tracking-wider whitespace-nowrap`}>
+                                                                <i className={`fa-solid ${CurrentIconPair.rClass}`}></i> Góc Tuyên Dương
+                                                            </h3>
+                                                            <div className={`whitespace-pre-wrap ${theme.text} text-[13px] leading-relaxed font-medium`}>{weekData.rewards}</div>
+                                                        </div>
+                                                    )}
+                                                    
+                                                    {weekData.reminders && (
+                                                        <div className="bg-gradient-to-b from-purple-50 to-white p-3.5 rounded-2xl border border-purple-200 shadow-sm h-full relative overflow-hidden">
+                                                            <div className="absolute -right-1 -bottom-1 text-3xl opacity-10">{CurrentIconPair.bgM}</div>
+                                                            <h3 className={`font-extrabold ${CurrentIconPair.mColor} flex items-center gap-1.5 mb-1.5 uppercase text-[11px] tracking-wider whitespace-nowrap`}>
+                                                                <i className={`fa-solid ${CurrentIconPair.mClass}`}></i> Góc Cố Gắng
+                                                            </h3>
+                                                            <div className={`whitespace-pre-wrap ${theme.text} text-[13px] leading-relaxed font-medium`}>{weekData.reminders}</div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {weekData.study && (
+                                                <div className="bg-blue-50/80 p-3.5 rounded-2xl border border-blue-100 shadow-sm">
+                                                    <h3 className="font-extrabold text-blue-800 flex items-center gap-1.5 mb-1.5 uppercase text-[11px] tracking-widest"><i className="fa-solid fa-book-open"></i> Học tập</h3>
+                                                    <div className={`whitespace-pre-wrap ${theme.text} text-[13px] leading-relaxed`}>{weekData.study}</div>
+                                                </div>
+                                            )}
+
+                                            {weekData.discipline && (
+                                                <div className="bg-emerald-50/80 p-3.5 rounded-2xl border border-emerald-100 shadow-sm">
+                                                    <h3 className="font-extrabold text-emerald-800 flex items-center gap-1.5 mb-1.5 uppercase text-[11px] tracking-widest"><i className="fa-solid fa-shield"></i> Nề nếp</h3>
+                                                    <div className={`whitespace-pre-wrap ${theme.text} text-[13px] leading-relaxed`}>{weekData.discipline}</div>
+                                                </div>
+                                            )}
+
+                                            {weekData.activity && (
+                                                <div className="bg-orange-50/80 p-3.5 rounded-2xl border border-orange-100 shadow-sm">
+                                                    <h3 className="font-extrabold text-orange-800 flex items-center gap-1.5 mb-1.5 uppercase text-[11px] tracking-widest"><i className="fa-solid fa-trophy"></i> Phong trào</h3>
+                                                    <div className={`whitespace-pre-wrap ${theme.text} text-[13px] leading-relaxed`}>{weekData.activity}</div>
+                                                </div>
+                                            )}
+
+                                            {weekData.important && (
+                                                <div className="bg-rose-50/80 p-3.5 rounded-2xl border border-rose-100 shadow-sm">
+                                                    <h3 className="font-extrabold text-rose-800 flex items-center gap-1.5 mb-1.5 uppercase text-[11px] tracking-widest"><i className="fa-solid fa-bell"></i> Quan trọng</h3>
+                                                    <div className={`whitespace-pre-wrap ${theme.text} text-[13px] leading-relaxed`}>{weekData.important}</div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className={`whitespace-pre-wrap ${theme.text} text-sm md:text-[15px] leading-relaxed font-medium`}>
+                                            {content || <div className="text-center py-6 opacity-50 italic text-sm">{theme.decorIcon} Nội dung thông báo sẽ hiển thị ở đây...</div>}
+                                        </div>
+                                    )}
+
+                                    {/* Signature */}
+                                    <div className={`mt-6 pt-4 border-t-2 border-dashed ${theme.border} text-right`}>
+                                        <p className={`text-lg font-extrabold ${theme.text} mb-0.5`}>{signature}</p>
+                                        <p className={`text-[11px] font-semibold opacity-60 ${theme.text}`}>Giáo viên Chủ nhiệm</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    {/* Thanh điều hướng dưới cùng cho điện thoại (Chỉ hiện trên màn hình nhỏ) */}
+                    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 p-3 pb-6 flex gap-3 z-50 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+                        <button 
+                            onClick={() => { setMobileTab('edit'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} 
+                            className={`flex-1 py-3 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${mobileTab === 'edit' ? 'bg-indigo-600 text-white shadow-md scale-[1.02]' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                        >
+                            <i className="fa-solid fa-pen-to-square"></i> Soạn thảo
+                        </button>
+                        <button 
+                            onClick={() => { setMobileTab('preview'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} 
+                            className={`flex-1 py-3 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${mobileTab === 'preview' ? 'bg-indigo-600 text-white shadow-md scale-[1.02]' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                        >
+                            <i className="fa-solid fa-image"></i> Xem trước & Tải
+                        </button>
+                    </div>
+
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
