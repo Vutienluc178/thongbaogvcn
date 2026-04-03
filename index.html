@@ -34,6 +34,11 @@
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #c7c7cc; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
+
+        /* Custom Highlight syntax styles mapped into span */
+        .hl-red { color: #dc2626; font-weight: 800; text-shadow: 0 1px 1px rgba(255,255,255,0.8); }
+        .hl-yellow { background-color: #fde047; color: #1f2937; font-weight: 800; padding: 0 4px; border-radius: 4px; }
+        .hl-blue { color: #2563eb; font-weight: 800; text-decoration: underline; text-underline-offset: 4px; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
@@ -79,61 +84,81 @@
             sunset: { id: 'sunset', name: 'Hoàng Hôn', icon: 'fa-cloud-sun', bg: 'bg-orange-50', card: 'bg-white', text: 'text-orange-900', border: 'border-orange-200', headerBg: 'bg-gradient-to-r from-orange-400 via-red-400 to-pink-500', headerText: 'text-white', accent: 'bg-orange-100 text-orange-800', decorIcon: '🌅', orb1: 'from-orange-300 to-red-300', orb2: 'from-pink-200 to-orange-200' },
             forest: { id: 'forest', name: 'Rừng Xanh', icon: 'fa-tree', bg: 'bg-green-50', card: 'bg-white', text: 'text-green-900', border: 'border-green-200', headerBg: 'bg-gradient-to-r from-green-500 via-green-600 to-emerald-700', headerText: 'text-white', accent: 'bg-green-100 text-green-800', decorIcon: '🌲', orb1: 'from-green-300 to-emerald-300', orb2: 'from-teal-200 to-green-200' },
             galaxy: { id: 'galaxy', name: 'Vũ Trụ', icon: 'fa-meteor', bg: 'bg-slate-100', card: 'bg-white', text: 'text-slate-800', border: 'border-indigo-200', headerBg: 'bg-gradient-to-r from-indigo-800 via-purple-800 to-slate-900', headerText: 'text-white', accent: 'bg-indigo-100 text-indigo-800', decorIcon: '🌌', orb1: 'from-indigo-300 to-purple-300', orb2: 'from-slate-300 to-indigo-200' },
-            coffee: { id: 'coffee', name: 'Cà Phê', icon: 'fa-mug-hot', bg: 'bg-stone-100', card: 'bg-white', text: 'text-stone-900', border: 'border-stone-200', headerBg: 'bg-gradient-to-r from-stone-400 via-stone-500 to-amber-700', headerText: 'text-white', accent: 'bg-stone-200 text-stone-800', decorIcon: '☕', orb1: 'from-stone-300 to-amber-200', orb2: 'from-amber-100 to-stone-200' }
+            coffee: { id: 'coffee', name: 'Cà Phê', icon: 'fa-mug-hot', bg: 'bg-stone-100', card: 'bg-white', text: 'text-stone-900', border: 'border-stone-200', headerBg: 'bg-gradient-to-r from-stone-400 via-stone-500 to-amber-700', headerText: 'text-white', accent: 'bg-stone-200 text-stone-800', decorIcon: '☕', orb1: 'from-stone-300 to-amber-200', orb2: 'from-amber-100 to-stone-200' },
+            modern: { id: 'modern', name: 'Hiện đại', icon: 'fa-cube', bg: 'bg-gray-100', card: 'bg-white', text: 'text-gray-800', border: 'border-gray-300', headerBg: 'bg-gradient-to-r from-gray-700 via-gray-800 to-black', headerText: 'text-white', accent: 'bg-gray-200 text-gray-900', decorIcon: '✨', orb1: 'from-gray-300 to-gray-400', orb2: 'from-gray-200 to-gray-300' },
+            elegant: { id: 'elegant', name: 'Trang trọng', icon: 'fa-landmark', bg: 'bg-slate-100', card: 'bg-white', text: 'text-slate-900', border: 'border-amber-200', headerBg: 'bg-gradient-to-r from-slate-800 via-slate-900 to-slate-800', headerText: 'text-amber-400', accent: 'bg-slate-800 text-amber-400', decorIcon: '⚜️', orb1: 'from-slate-300 to-amber-200', orb2: 'from-amber-100 to-slate-200' }
         };
+
+        const LAYOUTS = [
+            { id: 'classic', name: 'Cổ điển', icon: 'fa-table-cells-large' },
+            { id: 'modern', name: 'Hiện đại', icon: 'fa-list' },
+            { id: 'grid', name: 'Lưới năng động', icon: 'fa-border-all' },
+            { id: 'timeline', name: 'Hành trình', icon: 'fa-timeline' }
+        ];
 
         const SUGGESTIONS = {
             weekly: [
-                { label: 'Kế hoạch tuần', title: TITLE_SUGGESTIONS[0], weekPeriod: 'Tuần 12 (Từ 20/11 đến 26/11)', weekData: { rewards: '• Tuyên dương tổ 1 trực nhật rất sạch sẽ.\n• Khen ngợi bạn [Tên] tiến bộ môn Toán.', reminders: '• Tuần này cố gắng đi học sớm hơn 5 phút nhé!', study: '• Chuẩn bị tốt bài kiểm tra 15p Văn.', discipline: '• 100% mặc đồng phục đúng quy định.', activity: '• Đăng ký văn nghệ 20/11 (Hạn chót thứ 4).', important: 'Sáng Chủ Nhật có họp Phụ huynh giữa kỳ.' } },
-                { label: 'Tổng kết tuần', title: 'Nhìn Lại Một Tuần Tuyệt Vời Của Lớp Mình! 🌼', weekPeriod: 'Tổng kết Tuần 11', weekData: { rewards: '• 🌟 Ngôi sao của tuần: [Tên], [Tên].', reminders: '• Vài bạn thỉnh thoảng quên thẻ học sinh.', study: '• Tinh thần học tập tuần này rất sôi nổi.', discipline: '• Sĩ số duy trì tốt. Không đi trễ!', activity: '• Cảm ơn tinh thần cổ vũ trận bóng đá.', important: 'Tuần tới ôn thi trọng điểm, cố lên nhé!' } }
+                { label: 'Kế hoạch tuần', title: TITLE_SUGGESTIONS[0], weekPeriod: 'Tuần 12 (Từ 20/11 đến 26/11)', weekData: { rewards: '• Tuyên dương tổ 1 trực nhật rất sạch sẽ.\n• Khen ngợi bạn **[Tên]** tiến bộ môn Toán.', reminders: '• Tuần này cố gắng đi học sớm hơn ==5 phút== nhé!', study: '• Chuẩn bị tốt bài kiểm tra __15p Văn__.', discipline: '• **100%** mặc đồng phục đúng quy định.', activity: '• Đăng ký văn nghệ 20/11 (Hạn chót thứ 4).', important: 'Sáng Chủ Nhật có họp Phụ huynh giữa kỳ.' } },
+                { label: 'Tổng kết tuần', title: 'Nhìn Lại Một Tuần Tuyệt Vời Của Lớp Mình! 🌼', weekPeriod: 'Tổng kết Tuần 11', weekData: { rewards: '• 🌟 Ngôi sao của tuần: **[Tên]**, **[Tên]**.', reminders: '• Vài bạn thỉnh thoảng quên thẻ học sinh.', study: '• Tinh thần học tập tuần này rất sôi nổi.', discipline: '• Sĩ số duy trì tốt. Không đi trễ!', activity: '• Cảm ơn tinh thần cổ vũ trận bóng đá.', important: 'Tuần tới ôn thi trọng điểm, cố lên nhé!' } }
             ],
             study: [
-                { label: 'Động viên ôn thi', title: '🌟 Cố lên những chiến binh!', content: 'Góc nhỏ gửi các thành viên yêu quý của lớp mình! 🌻\n\nChỉ còn vài ngày nữa là bước vào kỳ thi quan trọng rồi. Thầy biết các em đang rất vất vả, nhưng hãy cố gắng thêm một chút nữa nhé.\nChúc cả lớp ôn tập thật tốt! ❤️' }
+                { label: 'Động viên ôn thi', title: '🌟 Cố lên những chiến binh!', content: 'Góc nhỏ gửi các thành viên yêu quý của lớp mình! 🌻\n\nChỉ còn vài ngày nữa là bước vào **kỳ thi quan trọng** rồi. Thầy biết các em đang rất vất vả, nhưng hãy cố gắng thêm một chút nữa nhé.\nChúc cả lớp ôn tập thật tốt! ❤️' }
             ],
             activity: [
                 { label: 'Kêu gọi phong trào', title: '🏆 Cháy hết mình cùng Hội thao!', content: 'Loa loa loa! 📣 Đại hội thể thao của trường sắp diễn ra!\nLớp mình vốn nổi tiếng nhiệt huyết, ai tham gia thì nhanh tay đăng ký nhé! Quyết thắng! 🔥😎' }
             ],
             discipline: [
-                { label: 'Nhắc đi muộn', title: '⏰ Góc gửi gắm những "bé lười" ngủ nướng', content: 'Gửi mấy trùm ngủ nướng của lớp mình! 🐢\nSáng nay thầy thấy vài cái tên quen thuộc đi muộn rồi nha. Từ ngày mai hứa đặt báo thức sớm hơn 5 phút để không bị trừ điểm oan nhé. Yêu thương! 💛' }
+                { label: 'Nhắc đi muộn', title: '⏰ Góc gửi gắm những "bé lười" ngủ nướng', content: 'Gửi mấy trùm ngủ nướng của lớp mình! 🐢\nSáng nay thầy thấy vài cái tên quen thuộc đi muộn rồi nha. Từ ngày mai hứa ==đặt báo thức sớm hơn 5 phút== để không bị trừ điểm oan nhé. Yêu thương! 💛' }
             ]
+        };
+
+        const formatTextWithHighlights = (text) => {
+            if (!text) return null;
+            const regex = /(\*\*.*?\*\*|==.*?==|__.*?__)/g;
+            const parts = text.split(regex);
+            
+            return parts.map((part, i) => {
+                if (part.startsWith('**') && part.endsWith('**')) return <span key={i} className="hl-red">{part.slice(2, -2)}</span>;
+                if (part.startsWith('==') && part.endsWith('==')) return <span key={i} className="hl-yellow">{part.slice(2, -2)}</span>;
+                if (part.startsWith('__') && part.endsWith('__')) return <span key={i} className="hl-blue">{part.slice(2, -2)}</span>;
+                return <span key={i}>{part}</span>;
+            });
         };
 
         function App() {
             const [currentTheme, setCurrentTheme] = useState('sunflower');
+            const [currentLayout, setCurrentLayout] = useState('classic');
             const [currentTab, setCurrentTab] = useState('weekly');
             
-            // Trạng thái chung
             const [schoolName, setSchoolName] = useState('THPT Nguyễn Hữu Cảnh');
             const [className, setClassName] = useState('Lớp 10A1');
             const [title, setTitle] = useState('');
             const [signature, setSignature] = useState('GVCN Vũ Tiến Lực');
             const [content, setContent] = useState('');
             
-            // Icon ngẫu nhiên
             const [iconPairIndex, setIconPairIndex] = useState(0);
 
-            // Trạng thái cho tab Tuần
             const [weekPeriod, setWeekPeriod] = useState('');
             const [weekData, setWeekData] = useState({ 
                 rewards: '', reminders: '', study: '', discipline: '', activity: '', important: '' 
             });
             
+            // State quản lý phần nhập liệu đang mở (Accordion)
+            const [expandedInput, setExpandedInput] = useState('rewards'); 
+
             const [toastMessage, setToastMessage] = useState({ show: false, text: '', type: 'success' });
             const [isExportingImage, setIsExportingImage] = useState(false);
             const [isExportingPDF, setIsExportingPDF] = useState(false);
             
-            // Trạng thái lưu trữ
             const [savedRecords, setSavedRecords] = useState([]);
             const [showHistoryModal, setShowHistoryModal] = useState(false);
             const [expandedTreeGroups, setExpandedTreeGroups] = useState([]);
 
-            // Trạng thái Tabs cho giao diện Điện thoại
             const [mobileTab, setMobileTab] = useState('edit');
-
             const fileInputRef = useRef(null);
 
             useEffect(() => {
-                const saved = localStorage.getItem('thongbao_saved_luc');
+                const saved = localStorage.getItem('thongbao_saved_luc_v4');
                 if (saved) {
                     const parsed = JSON.parse(saved);
                     setSavedRecords(parsed);
@@ -145,14 +170,55 @@
             const theme = THEMES[currentTheme];
             const CurrentIconPair = ICON_PAIRS[iconPairIndex];
 
+            // Cấu hình mảng dữ liệu cho phần Accordion Nhập liệu
+            const INPUT_SECTIONS = [
+                { id: 'rewards', label: 'Góc Tuyên Dương', icon: CurrentIconPair.rClass, border: 'border-amber-200', headerBg: 'bg-amber-50', headerHover: 'hover:bg-amber-100', text: 'text-amber-700', iconColor: 'text-amber-400', ring: 'focus:ring-amber-400', dot: 'bg-amber-500' },
+                { id: 'reminders', label: 'Góc Cố Gắng', icon: CurrentIconPair.mClass, border: 'border-purple-200', headerBg: 'bg-purple-50', headerHover: 'hover:bg-purple-100', text: 'text-purple-700', iconColor: 'text-purple-400', ring: 'focus:ring-purple-400', dot: 'bg-purple-500' },
+                { id: 'study', label: 'Học tập', icon: 'fa-book-open', border: 'border-blue-200', headerBg: 'bg-blue-50', headerHover: 'hover:bg-blue-100', text: 'text-blue-700', iconColor: 'text-blue-400', ring: 'focus:ring-blue-400', dot: 'bg-blue-500' },
+                { id: 'discipline', label: 'Nề nếp', icon: 'fa-shield', border: 'border-emerald-200', headerBg: 'bg-emerald-50', headerHover: 'hover:bg-emerald-100', text: 'text-emerald-700', iconColor: 'text-emerald-400', ring: 'focus:ring-emerald-400', dot: 'bg-emerald-500' },
+                { id: 'activity', label: 'Phong trào', icon: 'fa-trophy', border: 'border-orange-200', headerBg: 'bg-orange-50', headerHover: 'hover:bg-orange-100', text: 'text-orange-700', iconColor: 'text-orange-400', ring: 'focus:ring-orange-400', dot: 'bg-orange-500' },
+                { id: 'important', label: 'Quan trọng', icon: 'fa-bell', border: 'border-rose-200', headerBg: 'bg-rose-50', headerHover: 'hover:bg-rose-100', text: 'text-rose-700', iconColor: 'text-rose-400', ring: 'focus:ring-rose-400', dot: 'bg-rose-500' }
+            ];
+
             const showToast = (text, type = 'success') => {
                 setToastMessage({ show: true, text, type });
                 setTimeout(() => setToastMessage({ show: false, text: '', type: 'success' }), 3000);
             };
 
             const handleRandomizeIcons = () => {
-                const nextIndex = Math.floor(Math.random() * ICON_PAIRS.length);
-                setIconPairIndex(nextIndex);
+                setIconPairIndex(Math.floor(Math.random() * ICON_PAIRS.length));
+            };
+
+            const applyFormatToActiveElement = (prefix, suffix, defaultText = "Chữ nổi bật") => {
+                const el = document.activeElement;
+                if (el && el.tagName === 'TEXTAREA') {
+                    const start = el.selectionStart;
+                    const end = el.selectionEnd;
+                    const val = el.value;
+                    let selected = val.substring(start, end);
+                    let insertedText = selected;
+                    
+                    if (!selected) insertedText = defaultText;
+
+                    const newValue = val.substring(0, start) + prefix + insertedText + suffix + val.substring(end);
+                    
+                    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
+                    nativeInputValueSetter.call(el, newValue);
+                    const event = new Event('input', { bubbles: true });
+                    el.dispatchEvent(event);
+                    
+                    setTimeout(() => {
+                        el.focus();
+                        if (!selected) {
+                            el.selectionStart = start + prefix.length;
+                            el.selectionEnd = start + prefix.length + insertedText.length;
+                        } else {
+                            el.selectionStart = el.selectionEnd = start + prefix.length + insertedText.length + suffix.length;
+                        }
+                    }, 0);
+                } else {
+                    showToast('Hãy chạm (click) vào vị trí cần chèn trong ô soạn thảo trước nhé!', 'error');
+                }
             };
 
             const handleTextareaKeyDown = (e, setter, currentValue) => {
@@ -176,8 +242,13 @@
                         newCursorPos = start + 3; 
                     }
 
-                    setter(newText);
-                    setTimeout(() => { e.target.selectionStart = e.target.selectionEnd = newCursorPos; }, 0);
+                    const el = e.target;
+                    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
+                    nativeInputValueSetter.call(el, newText);
+                    const event = new Event('input', { bubbles: true });
+                    el.dispatchEvent(event);
+                    
+                    setTimeout(() => { el.selectionStart = el.selectionEnd = newCursorPos; }, 0);
                 }
             };
 
@@ -202,12 +273,12 @@
                 const newRecord = {
                     id: Date.now(),
                     dateSaved: new Date().toLocaleString('vi-VN'),
-                    schoolName, className, title, signature, currentTab, currentTheme, iconPairIndex,
+                    schoolName, className, title, signature, currentTab, currentTheme, currentLayout, iconPairIndex,
                     weekPeriod: weekPeriod || 'Chưa phân loại', weekData, content
                 };
                 const updated = [newRecord, ...savedRecords];
                 setSavedRecords(updated);
-                localStorage.setItem('thongbao_saved_luc', JSON.stringify(updated));
+                localStorage.setItem('thongbao_saved_luc_v4', JSON.stringify(updated));
                 
                 if (!expandedTreeGroups.includes(newRecord.weekPeriod)) {
                     setExpandedTreeGroups(prev => [...prev, newRecord.weekPeriod]);
@@ -222,19 +293,20 @@
                 setSignature(record.signature);
                 setCurrentTab(record.currentTab);
                 setCurrentTheme(record.currentTheme);
+                setCurrentLayout(record.currentLayout || 'classic');
                 setIconPairIndex(record.iconPairIndex || 0);
                 setWeekPeriod(record.weekPeriod !== 'Chưa phân loại' ? record.weekPeriod : '');
                 setWeekData(record.weekData || { rewards: '', reminders: '', study: '', activity: '', discipline: '', important: '' });
                 setContent(record.content || '');
                 setShowHistoryModal(false);
-                setMobileTab('edit'); // Chuyển sang tab edit sau khi load
+                setMobileTab('edit'); 
                 showToast('Đã nạp lại thông báo cũ!');
             };
 
             const deleteRecord = (id) => {
                 const updated = savedRecords.filter(r => r.id !== id);
                 setSavedRecords(updated);
-                localStorage.setItem('thongbao_saved_luc', JSON.stringify(updated));
+                localStorage.setItem('thongbao_saved_luc_v4', JSON.stringify(updated));
             };
 
             const groupedRecords = savedRecords.reduce((acc, rec) => {
@@ -248,7 +320,6 @@
                 setExpandedTreeGroups(prev => prev.includes(groupName) ? prev.filter(g => g !== groupName) : [...prev, groupName]);
             };
 
-            // ---- XỬ LÝ EXCEL ----
             const handleDownloadSampleExcel = () => {
                 const ws = XLSX.utils.json_to_sheet([{
                     "TieuDe": "Khởi Động Tuần Mới Tràn Năng Lượng! 🚀",
@@ -260,10 +331,7 @@
                     "PhongTrao": "• Đăng ký tham gia văn nghệ...",
                     "QuanTrong": "Sáng Chủ Nhật có họp Phụ huynh..."
                 }]);
-                
-                // Chỉnh kích thước cột cho đẹp
                 ws['!cols'] = [{wch:30}, {wch:25}, {wch:35}, {wch:35}, {wch:35}, {wch:35}, {wch:35}, {wch:35}];
-                
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "Mau_ThongBao_GVCN");
                 XLSX.writeFile(wb, "Mau_ThongBao_GVCN.xlsx");
@@ -283,44 +351,70 @@
                         const data = XLSX.utils.sheet_to_json(ws);
                         
                         if (data && data.length > 0) {
-                            const row = data[0]; // Lấy dòng dữ liệu đầu tiên
+                            const row = data[0];
                             if (row.TieuDe) setTitle(row.TieuDe);
                             if (row.ThoiGian) setWeekPeriod(row.ThoiGian);
                             setWeekData({
-                                rewards: row.TuyenDuong || '',
-                                reminders: row.CoGang || '',
-                                study: row.HocTap || '',
-                                discipline: row.NeNep || '',
-                                activity: row.PhongTrao || '',
-                                important: row.QuanTrong || ''
+                                rewards: row.TuyenDuong || '', reminders: row.CoGang || '',
+                                study: row.HocTap || '', discipline: row.NeNep || '',
+                                activity: row.PhongTrao || '', important: row.QuanTrong || ''
                             });
-                            setCurrentTab('weekly'); // Chuyển sang tab Tuần
+                            setCurrentTab('weekly'); 
                             showToast('Nhập dữ liệu Excel thành công!');
                         } else {
                             showToast('File Excel trống hoặc không đúng định dạng!', 'error');
                         }
                     } catch (error) {
                         showToast('Lỗi đọc file Excel!', 'error');
-                        console.error(error);
                     }
                 };
                 reader.readAsBinaryString(file);
-                // Reset input để có thể chọn lại file cũ
                 e.target.value = null; 
             };
 
             // ---- XUẤT ẢNH & PDF ----
+            const downloadFallback = (dataUrl, fileName) => {
+                const link = document.createElement('a');
+                link.download = fileName;
+                link.href = dataUrl;
+                link.click();
+                showToast('Đã tải ảnh PNG sắc nét về máy!');
+            };
+
             const handleExportImage = async () => {
                 setIsExportingImage(true);
                 const element = document.getElementById('preview-card');
                 try {
-                    const canvas = await window.html2canvas(element, { scale: 2, useCORS: true, backgroundColor: null });
-                    const link = document.createElement('a');
-                    link.download = `ThongBao_${new Date().getTime()}.png`;
-                    link.href = canvas.toDataURL('image/png');
-                    link.click();
-                    showToast('Đã tải ảnh PNG thành công!');
-                } catch (err) { showToast('Lỗi tạo ảnh. Vui lòng thử lại.', 'error'); } 
+                    // TĂNG SCALE LÊN 6 ĐỂ ẢNH ĐẠT ĐỘ PHÂN GIẢI SIÊU NÉT (GẤP ĐÔI BẢN TRƯỚC)
+                    const canvas = await window.html2canvas(element, { scale: 6, useCORS: true, backgroundColor: null, logging: false });
+                    const imgData = canvas.toDataURL('image/png', 1.0);
+                    const fileName = `ThongBao_${new Date().getTime()}.png`;
+
+                    // Mở bảng chọn "Lưu vào Album/Cuộn camera" trên điện thoại
+                    try {
+                        const blob = await (await fetch(imgData)).blob();
+                        const file = new File([blob], fileName, { type: 'image/png' });
+                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                            await navigator.share({
+                                files: [file],
+                                title: 'Thông báo lớp',
+                            });
+                            showToast('Thầy nhớ chọn "Lưu hình ảnh" để đưa vào Album nhé!');
+                            setIsExportingImage(false);
+                            return;
+                        }
+                    } catch (shareError) {
+                        if (shareError.name === 'AbortError') {
+                            setIsExportingImage(false);
+                            return; // User cancelled
+                        }
+                    }
+                    
+                    downloadFallback(imgData, fileName);
+                } catch (err) { 
+                    showToast('Lỗi tạo ảnh. Vui lòng thử lại.', 'error'); 
+                    console.error(err);
+                } 
                 finally { setIsExportingImage(false); }
             };
 
@@ -328,7 +422,7 @@
                 setIsExportingPDF(true);
                 const element = document.getElementById('preview-card');
                 try {
-                    const canvas = await window.html2canvas(element, { scale: 2, useCORS: true });
+                    const canvas = await window.html2canvas(element, { scale: 3, useCORS: true });
                     const imgData = canvas.toDataURL('image/png');
                     const { jsPDF } = window.jspdf;
                     const pdf = new jsPDF('p', 'mm', 'a4');
@@ -339,6 +433,152 @@
                     showToast('Đã tải PDF thành công!');
                 } catch (err) { showToast('Lỗi tạo PDF. Vui lòng thử lại.', 'error'); } 
                 finally { setIsExportingPDF(false); }
+            };
+
+            // Rendering Helpers cho các Bố cục (Layouts)
+            const renderRewardsReminders = () => {
+                if (!weekData.rewards && !weekData.reminders) return null;
+                
+                if (currentLayout === 'modern') {
+                    return (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+                            {weekData.rewards && (
+                                <div className={`border-l-4 border-amber-400 pl-4 py-2 bg-white/40 rounded-r-xl shadow-sm`}>
+                                    <h3 className={`font-extrabold ${CurrentIconPair.rColor} flex items-center gap-1.5 mb-1.5 uppercase text-[11px] tracking-wider`}>
+                                        <i className={`fa-solid ${CurrentIconPair.rClass}`}></i> Góc Tuyên Dương
+                                    </h3>
+                                    <div className={`whitespace-pre-wrap ${theme.text} text-[13px] leading-relaxed`}>{formatTextWithHighlights(weekData.rewards)}</div>
+                                </div>
+                            )}
+                            {weekData.reminders && (
+                                <div className={`border-l-4 border-purple-400 pl-4 py-2 bg-white/40 rounded-r-xl shadow-sm`}>
+                                    <h3 className={`font-extrabold ${CurrentIconPair.mColor} flex items-center gap-1.5 mb-1.5 uppercase text-[11px] tracking-wider`}>
+                                        <i className={`fa-solid ${CurrentIconPair.mClass}`}></i> Góc Cố Gắng
+                                    </h3>
+                                    <div className={`whitespace-pre-wrap ${theme.text} text-[13px] leading-relaxed`}>{formatTextWithHighlights(weekData.reminders)}</div>
+                                </div>
+                            )}
+                        </div>
+                    );
+                }
+
+                if (currentLayout === 'timeline') {
+                    return (
+                        <>
+                            {weekData.rewards && (
+                                <div className="relative pl-6 pb-2">
+                                    <div className="absolute -left-[23px] top-1 w-4 h-4 rounded-full bg-white border-4 border-amber-400 z-10"></div>
+                                    <h3 className={`font-extrabold ${CurrentIconPair.rColor} flex items-center gap-1.5 mb-1.5 uppercase text-[11px] tracking-wider`}>
+                                        <i className={`fa-solid ${CurrentIconPair.rClass}`}></i> Góc Tuyên Dương
+                                    </h3>
+                                    <div className={`whitespace-pre-wrap ${theme.text} text-[13px] leading-relaxed`}>{formatTextWithHighlights(weekData.rewards)}</div>
+                                </div>
+                            )}
+                            {weekData.reminders && (
+                                <div className="relative pl-6 pb-2">
+                                    <div className="absolute -left-[23px] top-1 w-4 h-4 rounded-full bg-white border-4 border-purple-400 z-10"></div>
+                                    <h3 className={`font-extrabold ${CurrentIconPair.mColor} flex items-center gap-1.5 mb-1.5 uppercase text-[11px] tracking-wider`}>
+                                        <i className={`fa-solid ${CurrentIconPair.mClass}`}></i> Góc Cố Gắng
+                                    </h3>
+                                    <div className={`whitespace-pre-wrap ${theme.text} text-[13px] leading-relaxed`}>{formatTextWithHighlights(weekData.reminders)}</div>
+                                </div>
+                            )}
+                        </>
+                    );
+                }
+
+                return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-1">
+                        {weekData.rewards && (
+                            <div className="bg-gradient-to-b from-amber-50 to-white p-3.5 rounded-2xl border border-amber-200 shadow-sm h-full relative overflow-hidden">
+                                <div className="absolute -right-1 -bottom-1 text-3xl opacity-10">{CurrentIconPair.bgR}</div>
+                                <h3 className={`font-extrabold ${CurrentIconPair.rColor} flex items-center gap-1.5 mb-1.5 uppercase text-[11px] tracking-wider whitespace-nowrap`}>
+                                    <i className={`fa-solid ${CurrentIconPair.rClass}`}></i> Góc Tuyên Dương
+                                </h3>
+                                <div className={`whitespace-pre-wrap ${theme.text} text-[13px] leading-relaxed`}>{formatTextWithHighlights(weekData.rewards)}</div>
+                            </div>
+                        )}
+                        {weekData.reminders && (
+                            <div className="bg-gradient-to-b from-purple-50 to-white p-3.5 rounded-2xl border border-purple-200 shadow-sm h-full relative overflow-hidden">
+                                <div className="absolute -right-1 -bottom-1 text-3xl opacity-10">{CurrentIconPair.bgM}</div>
+                                <h3 className={`font-extrabold ${CurrentIconPair.mColor} flex items-center gap-1.5 mb-1.5 uppercase text-[11px] tracking-wider whitespace-nowrap`}>
+                                    <i className={`fa-solid ${CurrentIconPair.mClass}`}></i> Góc Cố Gắng
+                                </h3>
+                                <div className={`whitespace-pre-wrap ${theme.text} text-[13px] leading-relaxed`}>{formatTextWithHighlights(weekData.reminders)}</div>
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
+            const renderMainSections = () => {
+                const sections = [
+                    { id: 'study', title: 'Học tập', icon: 'fa-book-open', data: weekData.study, color: 'blue' },
+                    { id: 'discipline', title: 'Nề nếp', icon: 'fa-shield', data: weekData.discipline, color: 'emerald' },
+                    { id: 'activity', title: 'Phong trào', icon: 'fa-trophy', data: weekData.activity, color: 'orange' },
+                    { id: 'important', title: 'Quan trọng', icon: 'fa-bell', data: weekData.important, color: 'rose' }
+                ].filter(s => s.data);
+
+                if (sections.length === 0) return null;
+
+                if (currentLayout === 'modern') {
+                    return (
+                        <div className="space-y-3 mt-3">
+                            {sections.map(s => (
+                                <div key={s.id} className={`border-l-4 border-${s.color}-400 pl-4 py-2 bg-white/40 rounded-r-xl shadow-sm`}>
+                                    <h3 className={`font-extrabold text-${s.color}-700 flex items-center gap-1.5 mb-1.5 uppercase text-[11px] tracking-widest`}>
+                                        <i className={`fa-solid ${s.icon}`}></i> {s.title}
+                                    </h3>
+                                    <div className={`whitespace-pre-wrap ${theme.text} text-[13px] leading-relaxed`}>{formatTextWithHighlights(s.data)}</div>
+                                </div>
+                            ))}
+                        </div>
+                    );
+                }
+
+                if (currentLayout === 'grid') {
+                    return (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                            {sections.map(s => (
+                                <div key={s.id} className={`bg-white/60 p-3.5 rounded-2xl border border-${s.color}-200 shadow-sm flex flex-col h-full`}>
+                                    <h3 className={`font-extrabold text-${s.color}-800 flex items-center gap-1.5 mb-1.5 uppercase text-[11px] tracking-widest`}>
+                                        <i className={`fa-solid ${s.icon}`}></i> {s.title}
+                                    </h3>
+                                    <div className={`whitespace-pre-wrap ${theme.text} text-[13px] leading-relaxed flex-1`}>{formatTextWithHighlights(s.data)}</div>
+                                </div>
+                            ))}
+                        </div>
+                    );
+                }
+
+                if (currentLayout === 'timeline') {
+                    return (
+                        <>
+                            {sections.map(s => (
+                                <div key={s.id} className="relative pl-6 pb-2">
+                                    <div className={`absolute -left-[23px] top-1 w-4 h-4 rounded-full bg-white border-4 border-${s.color}-400 z-10`}></div>
+                                    <h3 className={`font-extrabold text-${s.color}-700 flex items-center gap-1.5 mb-1.5 uppercase text-[11px] tracking-widest`}>
+                                        <i className={`fa-solid ${s.icon}`}></i> {s.title}
+                                    </h3>
+                                    <div className={`whitespace-pre-wrap ${theme.text} text-[13px] leading-relaxed`}>{formatTextWithHighlights(s.data)}</div>
+                                </div>
+                            ))}
+                        </>
+                    );
+                }
+
+                return (
+                    <div className="space-y-3 mt-3">
+                        {sections.map(s => (
+                            <div key={s.id} className={`bg-${s.color}-50/80 p-3.5 rounded-2xl border border-${s.color}-100 shadow-sm`}>
+                                <h3 className={`font-extrabold text-${s.color}-800 flex items-center gap-1.5 mb-1.5 uppercase text-[11px] tracking-widest`}>
+                                    <i className={`fa-solid ${s.icon}`}></i> {s.title}
+                                </h3>
+                                <div className={`whitespace-pre-wrap ${theme.text} text-[13px] leading-relaxed`}>{formatTextWithHighlights(s.data)}</div>
+                            </div>
+                        ))}
+                    </div>
+                );
             };
 
             return (
@@ -410,7 +650,7 @@
                     {/* NỘI DUNG CHÍNH */}
                     <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6 relative z-10">
                         
-                        {/* LEFT COLUMN - EDITOR (Hiển thị dựa theo Mobile Tab) */}
+                        {/* LEFT COLUMN - EDITOR */}
                         <div className={`flex-col gap-5 ${mobileTab === 'edit' ? 'flex' : 'hidden'} lg:flex`}>
                             <div className="bg-white/90 backdrop-blur-md p-5 rounded-[2rem] shadow-lg border border-white/40">
                                 <div className="flex justify-between items-center mb-5">
@@ -434,16 +674,30 @@
                                     </div>
                                 </div>
 
-                                {/* THEME SELECTION */}
-                                <div className="mb-5">
-                                    <label className="block text-xs font-semibold text-gray-600 mb-2">1. Giao diện màu sắc</label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {Object.values(THEMES).map((t) => (
-                                            <button key={t.id} onClick={() => setCurrentTheme(t.id)} className={`flex items-center gap-1.5 px-4 py-2 lg:px-3 lg:py-1.5 rounded-full border text-sm lg:text-xs transition-all duration-300 ${currentTheme === t.id ? `${t.accent} border-transparent shadow-md ring-2 ring-offset-1 ring-opacity-50 font-medium scale-105` : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200 hover:scale-105'}`}>
-                                                <i className={`fa-solid ${t.icon}`}></i> {t.name}
-                                            </button>
-                                        ))}
+                                {/* THEME & LAYOUT SELECTION */}
+                                <div className="mb-5 space-y-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-600 mb-2">1. Màu sắc giao diện</label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {Object.values(THEMES).map((t) => (
+                                                <button key={t.id} onClick={() => setCurrentTheme(t.id)} className={`flex items-center gap-1.5 px-4 py-2 lg:px-3 lg:py-1.5 rounded-full border text-sm lg:text-xs transition-all duration-300 ${currentTheme === t.id ? `${t.accent} border-transparent shadow-md ring-2 ring-offset-1 ring-opacity-50 font-medium scale-105` : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200 hover:scale-105'}`}>
+                                                    <i className={`fa-solid ${t.icon}`}></i> {t.name}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
+                                    {currentTab === 'weekly' && (
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-600 mb-2">1.5 Bố cục hiển thị</label>
+                                            <div className="flex flex-wrap gap-2">
+                                                {LAYOUTS.map((l) => (
+                                                    <button key={l.id} onClick={() => setCurrentLayout(l.id)} className={`flex items-center gap-1.5 px-4 py-2 lg:px-3 lg:py-1.5 rounded-xl border text-sm lg:text-xs transition-all duration-300 ${currentLayout === l.id ? `bg-indigo-600 text-white border-indigo-600 shadow-md scale-105` : 'bg-white text-gray-600 hover:bg-gray-50 border-gray-200 hover:scale-105'}`}>
+                                                        <i className={`fa-solid ${l.icon}`}></i> {l.name}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* CATEGORY & SUGGESTIONS */}
@@ -451,7 +705,6 @@
                                     <div className="flex flex-col sm:flex-row justify-between sm:items-end gap-2 mb-2">
                                         <label className="block text-xs font-semibold text-gray-600">2. Chủ đề soạn thảo</label>
                                         
-                                        {/* Nút Excel cho Tab Tuần */}
                                         {currentTab === 'weekly' && (
                                             <div className="flex gap-2">
                                                 <button onClick={handleDownloadSampleExcel} className="text-[11px] font-medium text-green-700 bg-green-50 border border-green-200 hover:bg-green-100 px-3 py-1.5 rounded-md transition-colors flex items-center gap-1">
@@ -479,22 +732,6 @@
                                     </div>
 
                                     <div className="flex flex-wrap gap-2">
-                                        {SUGGESTIONS[currentTab].map((sug, idx) => (
-                                            <button key={idx} onClick={() => handleApplySuggestion(sug)} className="px-3 py-1.5 bg-gray-100 hover:bg-indigo-50 text-gray-700 hover:text-indigo-700 rounded-lg text-sm lg:text-xs transition-colors border border-gray-200 hover:border-indigo-200">
-                                                {sug.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* INPUTS THEO THỨ TỰ TÂM LÝ HỌC GIÁO DỤC TÍCH CỰC */}
-                                <div className="space-y-4 lg:space-y-3">
-                                    <div>
-                                        <label className="block text-xs font-semibold text-gray-600 mb-1 flex justify-between">
-                                            Tiêu đề thông báo
-                                        </label>
-                                        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Nhập tiêu đề truyền cảm hứng..." className="w-full px-4 py-3 lg:px-3 lg:py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none transition-all font-medium text-indigo-900 text-base lg:text-sm mb-2" />
-                                        
                                         {/* Dropdown 10 Tiêu đề Gợi ý */}
                                         {currentTab === 'weekly' && (
                                             <select 
@@ -510,6 +747,35 @@
                                         )}
                                     </div>
 
+                                    {/* THANH CÔNG CỤ NHẤN MẠNH (HIGHLIGHTER) */}
+                                    <div className="flex flex-wrap items-center gap-2 p-2 bg-slate-100 rounded-xl border border-slate-200 shadow-inner">
+                                        <span className="text-[11px] font-bold text-slate-500 uppercase ml-1"><i className="fa-solid fa-highlighter"></i> Nhấn mạnh chữ:</span>
+                                        <button 
+                                            onMouseDown={(e) => e.preventDefault()} 
+                                            onClick={() => applyFormatToActiveElement('**', '**', 'Chữ đỏ')} 
+                                            className="px-2 py-1 bg-white border border-red-200 text-red-600 font-bold rounded shadow-sm text-xs hover:bg-red-50 transition-colors" 
+                                            title="Chèn chữ Đỏ đậm"
+                                        >
+                                            Đỏ đậm
+                                        </button>
+                                        <button 
+                                            onMouseDown={(e) => e.preventDefault()} 
+                                            onClick={() => applyFormatToActiveElement('==', '==', 'Chữ dạ quang')} 
+                                            className="px-2 py-1 bg-yellow-300 border border-yellow-400 text-gray-900 font-bold rounded shadow-sm text-xs hover:bg-yellow-400 transition-colors" 
+                                            title="Chèn chữ Dạ quang"
+                                        >
+                                            Dạ quang
+                                        </button>
+                                        <button 
+                                            onMouseDown={(e) => e.preventDefault()} 
+                                            onClick={() => applyFormatToActiveElement('__', '__', 'Chữ xanh')} 
+                                            className="px-2 py-1 bg-white border border-blue-200 text-blue-600 font-bold underline rounded shadow-sm text-xs hover:bg-blue-50 transition-colors" 
+                                            title="Chèn chữ Xanh nổi bật"
+                                        >
+                                            Xanh nổi bật
+                                        </button>
+                                    </div>
+
                                     {currentTab === 'weekly' ? (
                                         <div className="space-y-4 lg:space-y-3 border border-indigo-100 bg-indigo-50/50 p-4 rounded-2xl">
                                             <div className="mb-2">
@@ -517,42 +783,40 @@
                                                 <input type="text" value={weekPeriod} onChange={(e) => setWeekPeriod(e.target.value)} placeholder="VD: Tuần 12 (Từ 20/11 đến 26/11)" className="w-full px-4 py-3 lg:px-3 lg:py-2 border border-white rounded-xl focus:ring-2 focus:ring-indigo-400 shadow-sm outline-none transition-all text-base lg:text-sm" />
                                             </div>
 
-                                            {/* Hai góc tích cực Song Song */}
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                                <div className="col-span-1 md:col-span-2 flex justify-between items-center mb-[-4px]">
-                                                    <span className="text-xs font-semibold text-gray-500">Các góc Tích cực:</span>
-                                                    <button onClick={handleRandomizeIcons} className="flex items-center gap-1 text-[11px] font-medium bg-white border border-gray-200 px-2 py-1 rounded-md text-indigo-600 hover:bg-indigo-50 shadow-sm transition-all"><i className="fa-solid fa-shuffle"></i> Đổi Icon góc</button>
-                                                </div>
-                                                <div className="bg-amber-50 p-3 lg:p-2.5 rounded-xl border border-amber-200">
-                                                    <label className="block text-xs font-bold text-amber-700 mb-1 flex items-center gap-1">
-                                                        <i className={`fa-solid ${CurrentIconPair.rClass}`}></i> Góc Tuyên Dương
-                                                    </label>
-                                                    <textarea value={weekData.rewards} onChange={(e) => setWeekData({...weekData, rewards: e.target.value})} onKeyDown={(e) => handleWeekDataKeyDown(e, 'rewards')} rows="2" placeholder="Ghi nhận thành tích... (Ấn Enter)" className="w-full px-3 py-2 lg:px-2.5 lg:py-1.5 border-0 rounded-lg focus:ring-2 focus:ring-amber-400 bg-white/70 outline-none resize-none text-base lg:text-xs"></textarea>
-                                                </div>
-
-                                                <div className="bg-purple-50 p-3 lg:p-2.5 rounded-xl border border-purple-200">
-                                                    <label className="block text-xs font-bold text-purple-700 mb-1 flex items-center gap-1">
-                                                        <i className={`fa-solid ${CurrentIconPair.mClass}`}></i> Góc Cố Gắng
-                                                    </label>
-                                                    <textarea value={weekData.reminders} onChange={(e) => setWeekData({...weekData, reminders: e.target.value})} onKeyDown={(e) => handleWeekDataKeyDown(e, 'reminders')} rows="2" placeholder="Nhắc nhở khích lệ... (Ấn Enter)" className="w-full px-3 py-2 lg:px-2.5 lg:py-1.5 border-0 rounded-lg focus:ring-2 focus:ring-purple-400 bg-white/70 outline-none resize-none text-base lg:text-xs"></textarea>
-                                                </div>
+                                            <div className="flex justify-between items-center mb-1 mt-4">
+                                                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Nội dung chi tiết</span>
+                                                <button onClick={handleRandomizeIcons} className="flex items-center gap-1 text-[11px] font-medium bg-white border border-gray-200 px-2 py-1 rounded-md text-indigo-600 hover:bg-indigo-50 shadow-sm transition-all"><i className="fa-solid fa-shuffle"></i> Đổi Icon góc</button>
                                             </div>
 
-                                            <div className="pt-2 lg:pt-1 border-t border-indigo-100/50">
-                                                <label className="block text-xs font-semibold text-blue-700 mb-1 flex items-center gap-1"><i className="fa-solid fa-book-open"></i> Học tập</label>
-                                                <textarea value={weekData.study} onChange={(e) => setWeekData({...weekData, study: e.target.value})} onKeyDown={(e) => handleWeekDataKeyDown(e, 'study')} rows="2" placeholder="Gõ nội dung, ấn Enter để tự tạo (•)..." className="w-full px-4 py-3 lg:px-3 lg:py-1.5 border border-white rounded-xl focus:ring-2 focus:ring-blue-400 shadow-sm outline-none resize-none text-base lg:text-sm"></textarea>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-semibold text-emerald-700 mb-1 flex items-center gap-1"><i className="fa-solid fa-shield"></i> Nề nếp</label>
-                                                <textarea value={weekData.discipline} onChange={(e) => setWeekData({...weekData, discipline: e.target.value})} onKeyDown={(e) => handleWeekDataKeyDown(e, 'discipline')} rows="2" placeholder="Gõ nội dung, ấn Enter để tự tạo (•)..." className="w-full px-4 py-3 lg:px-3 lg:py-1.5 border border-white rounded-xl focus:ring-2 focus:ring-emerald-400 shadow-sm outline-none resize-none text-base lg:text-sm"></textarea>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-semibold text-orange-700 mb-1 flex items-center gap-1"><i className="fa-solid fa-trophy"></i> Phong trào</label>
-                                                <textarea value={weekData.activity} onChange={(e) => setWeekData({...weekData, activity: e.target.value})} onKeyDown={(e) => handleWeekDataKeyDown(e, 'activity')} rows="2" placeholder="Gõ nội dung, ấn Enter để tự tạo (•)..." className="w-full px-4 py-3 lg:px-3 lg:py-1.5 border border-white rounded-xl focus:ring-2 focus:ring-orange-400 shadow-sm outline-none resize-none text-base lg:text-sm"></textarea>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-semibold text-rose-700 mb-1 flex items-center gap-1"><i className="fa-solid fa-bell"></i> Thông báo quan trọng</label>
-                                                <textarea value={weekData.important} onChange={(e) => setWeekData({...weekData, important: e.target.value})} onKeyDown={(e) => handleWeekDataKeyDown(e, 'important')} rows="2" placeholder="Gõ nội dung, ấn Enter để tự tạo (•)..." className="w-full px-4 py-3 lg:px-3 lg:py-1.5 border border-white rounded-xl focus:ring-2 focus:ring-rose-400 shadow-sm outline-none resize-none text-base lg:text-sm"></textarea>
+                                            {/* GIAO DIỆN ACCORDION (GẬP MỞ THÔNG MINH) */}
+                                            <div className="space-y-2.5">
+                                                {INPUT_SECTIONS.map(sec => (
+                                                    <div key={sec.id} className={`border ${sec.border} rounded-xl overflow-hidden bg-white shadow-sm transition-all duration-300`}>
+                                                        <button
+                                                            onClick={() => setExpandedInput(expandedInput === sec.id ? null : sec.id)}
+                                                            className={`w-full px-3 py-3 flex justify-between items-center ${sec.headerBg} ${sec.headerHover} transition-colors`}
+                                                        >
+                                                            <div className={`flex items-center gap-2 font-bold ${sec.text} text-[12px] uppercase tracking-wider`}>
+                                                                <i className={`fa-solid ${sec.icon}`}></i> {sec.label}
+                                                                {weekData[sec.id] && <span className={`w-2 h-2 rounded-full ${sec.dot} shadow-sm`}></span>}
+                                                            </div>
+                                                            <i className={`fa-solid fa-chevron-down transition-transform duration-300 ${expandedInput === sec.id ? 'rotate-180' : ''} ${sec.iconColor}`}></i>
+                                                        </button>
+                                                        
+                                                        <div className={`transition-all duration-300 ease-in-out ${expandedInput === sec.id ? 'max-h-[300px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                                                            <div className="p-2.5 bg-white border-t border-gray-50">
+                                                                <textarea
+                                                                    value={weekData[sec.id]}
+                                                                    onChange={(e) => setWeekData({...weekData, [sec.id]: e.target.value})}
+                                                                    onKeyDown={(e) => handleWeekDataKeyDown(e, sec.id)}
+                                                                    rows="4"
+                                                                    placeholder={(sec.id === 'rewards' || sec.id === 'reminders') ? "Ghi nhận/Nhắc nhở... (Ấn Enter để tạo dòng)" : "Gõ nội dung, ấn Enter để tự tạo (•)..."}
+                                                                    className={`w-full px-3 py-2 border-0 bg-slate-50 rounded-lg focus:ring-2 ${sec.ring} focus:bg-white outline-none resize-none text-base lg:text-sm transition-colors`}
+                                                                ></textarea>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
                                     ) : (
@@ -577,7 +841,7 @@
                             </div>
                         </div>
 
-                        {/* RIGHT COLUMN - PREVIEW (Hiển thị dựa theo Mobile Tab) */}
+                        {/* RIGHT COLUMN - PREVIEW */}
                         <div className={`flex-col gap-3 ${mobileTab === 'preview' ? 'flex' : 'hidden'} lg:flex`}>
                             <div className="flex flex-wrap items-center justify-between px-2 gap-3">
                                 <span className="text-xs font-bold text-gray-600 uppercase tracking-wider flex items-center gap-1.5">
@@ -595,7 +859,7 @@
                                 </div>
                             </div>
 
-                            {/* THE NOTIFICATION CARD (COMPACT LAYOUT) */}
+                            {/* THE NOTIFICATION CARD */}
                             <div id="preview-card" className={`relative overflow-hidden rounded-[1.5rem] shadow-xl border-4 border-white ${theme.card} transition-all duration-700 transform`}>
                                 {/* Header / Banner */}
                                 <div className={`${theme.headerBg} px-6 py-5 relative overflow-hidden`}>
@@ -629,64 +893,19 @@
                                 {/* Body */}
                                 <div className="p-6 md:p-7">
                                     {currentTab === 'weekly' ? (
-                                        <div className="space-y-4">
+                                        <div className="relative">
+                                            {currentLayout === 'timeline' && (
+                                                <div className="absolute left-[7px] top-2 bottom-4 w-0.5 bg-indigo-100 z-0"></div>
+                                            )}
+                                            
                                             {!weekData.study && !weekData.activity && !weekData.discipline && !weekData.important && !weekData.rewards && !weekData.reminders && (
-                                                <div className="text-center py-6 opacity-50">
+                                                <div className="text-center py-6 opacity-50 relative z-10">
                                                     <div className="text-3xl mb-2">{theme.decorIcon}</div><span className="italic text-sm">Nội dung tuần sẽ hiển thị ở đây...</span>
                                                 </div>
                                             )}
 
-                                            {(weekData.rewards || weekData.reminders) && (
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-1">
-                                                    {weekData.rewards && (
-                                                        <div className="bg-gradient-to-b from-amber-50 to-white p-3.5 rounded-2xl border border-amber-200 shadow-sm h-full relative overflow-hidden">
-                                                            <div className="absolute -right-1 -bottom-1 text-3xl opacity-10">{CurrentIconPair.bgR}</div>
-                                                            <h3 className={`font-extrabold ${CurrentIconPair.rColor} flex items-center gap-1.5 mb-1.5 uppercase text-[11px] tracking-wider whitespace-nowrap`}>
-                                                                <i className={`fa-solid ${CurrentIconPair.rClass}`}></i> Góc Tuyên Dương
-                                                            </h3>
-                                                            <div className={`whitespace-pre-wrap ${theme.text} text-[13px] leading-relaxed font-medium`}>{weekData.rewards}</div>
-                                                        </div>
-                                                    )}
-                                                    
-                                                    {weekData.reminders && (
-                                                        <div className="bg-gradient-to-b from-purple-50 to-white p-3.5 rounded-2xl border border-purple-200 shadow-sm h-full relative overflow-hidden">
-                                                            <div className="absolute -right-1 -bottom-1 text-3xl opacity-10">{CurrentIconPair.bgM}</div>
-                                                            <h3 className={`font-extrabold ${CurrentIconPair.mColor} flex items-center gap-1.5 mb-1.5 uppercase text-[11px] tracking-wider whitespace-nowrap`}>
-                                                                <i className={`fa-solid ${CurrentIconPair.mClass}`}></i> Góc Cố Gắng
-                                                            </h3>
-                                                            <div className={`whitespace-pre-wrap ${theme.text} text-[13px] leading-relaxed font-medium`}>{weekData.reminders}</div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )}
-
-                                            {weekData.study && (
-                                                <div className="bg-blue-50/80 p-3.5 rounded-2xl border border-blue-100 shadow-sm">
-                                                    <h3 className="font-extrabold text-blue-800 flex items-center gap-1.5 mb-1.5 uppercase text-[11px] tracking-widest"><i className="fa-solid fa-book-open"></i> Học tập</h3>
-                                                    <div className={`whitespace-pre-wrap ${theme.text} text-[13px] leading-relaxed`}>{weekData.study}</div>
-                                                </div>
-                                            )}
-
-                                            {weekData.discipline && (
-                                                <div className="bg-emerald-50/80 p-3.5 rounded-2xl border border-emerald-100 shadow-sm">
-                                                    <h3 className="font-extrabold text-emerald-800 flex items-center gap-1.5 mb-1.5 uppercase text-[11px] tracking-widest"><i className="fa-solid fa-shield"></i> Nề nếp</h3>
-                                                    <div className={`whitespace-pre-wrap ${theme.text} text-[13px] leading-relaxed`}>{weekData.discipline}</div>
-                                                </div>
-                                            )}
-
-                                            {weekData.activity && (
-                                                <div className="bg-orange-50/80 p-3.5 rounded-2xl border border-orange-100 shadow-sm">
-                                                    <h3 className="font-extrabold text-orange-800 flex items-center gap-1.5 mb-1.5 uppercase text-[11px] tracking-widest"><i className="fa-solid fa-trophy"></i> Phong trào</h3>
-                                                    <div className={`whitespace-pre-wrap ${theme.text} text-[13px] leading-relaxed`}>{weekData.activity}</div>
-                                                </div>
-                                            )}
-
-                                            {weekData.important && (
-                                                <div className="bg-rose-50/80 p-3.5 rounded-2xl border border-rose-100 shadow-sm">
-                                                    <h3 className="font-extrabold text-rose-800 flex items-center gap-1.5 mb-1.5 uppercase text-[11px] tracking-widest"><i className="fa-solid fa-bell"></i> Quan trọng</h3>
-                                                    <div className={`whitespace-pre-wrap ${theme.text} text-[13px] leading-relaxed`}>{weekData.important}</div>
-                                                </div>
-                                            )}
+                                            {renderRewardsReminders()}
+                                            {renderMainSections()}
                                         </div>
                                     ) : (
                                         <div className={`whitespace-pre-wrap ${theme.text} text-sm md:text-[15px] leading-relaxed font-medium`}>
@@ -695,7 +914,7 @@
                                     )}
 
                                     {/* Signature */}
-                                    <div className={`mt-6 pt-4 border-t-2 border-dashed ${theme.border} text-right`}>
+                                    <div className={`mt-6 pt-4 border-t-2 border-dashed ${theme.border} text-right relative z-10`}>
                                         <p className={`text-lg font-extrabold ${theme.text} mb-0.5`}>{signature}</p>
                                         <p className={`text-[11px] font-semibold opacity-60 ${theme.text}`}>Giáo viên Chủ nhiệm</p>
                                     </div>
@@ -705,7 +924,7 @@
 
                     </div>
 
-                    {/* Thanh điều hướng dưới cùng cho điện thoại (Chỉ hiện trên màn hình nhỏ) */}
+                    {/* Thanh điều hướng dưới cùng cho điện thoại */}
                     <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 p-3 pb-6 flex gap-3 z-50 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
                         <button 
                             onClick={() => { setMobileTab('edit'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} 
