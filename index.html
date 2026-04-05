@@ -93,7 +93,6 @@
             coffee: { id: 'coffee', name: 'Cà Phê', icon: 'fa-mug-hot', bg: 'bg-stone-100', card: 'bg-white', text: 'text-stone-900', border: 'border-stone-200', headerBg: 'bg-gradient-to-r from-stone-400 via-stone-500 to-amber-700', headerText: 'text-white', accent: 'bg-stone-200 text-stone-800', decorIcon: '☕', orb1: 'from-stone-300 to-amber-200', orb2: 'from-amber-100 to-stone-200' },
             modern: { id: 'modern', name: 'Hiện đại', icon: 'fa-cube', bg: 'bg-gray-100', card: 'bg-white', text: 'text-gray-800', border: 'border-gray-300', headerBg: 'bg-gradient-to-r from-gray-700 via-gray-800 to-black', headerText: 'text-white', accent: 'bg-gray-200 text-gray-900', decorIcon: '✨', orb1: 'from-gray-300 to-gray-400', orb2: 'from-gray-200 to-gray-300' },
             elegant: { id: 'elegant', name: 'Trang trọng', icon: 'fa-landmark', bg: 'bg-slate-100', card: 'bg-white', text: 'text-slate-900', border: 'border-amber-200', headerBg: 'bg-gradient-to-r from-slate-800 via-slate-900 to-slate-800', headerText: 'text-amber-400', accent: 'bg-slate-800 text-amber-400', decorIcon: '⚜️', orb1: 'from-slate-300 to-amber-200', orb2: 'from-amber-100 to-slate-200' },
-            // THÊM 10 THEME GRADIENT MỚI
             aurora: { id: 'aurora', name: 'Cực Quang', icon: 'fa-smog', bg: 'bg-fuchsia-50', card: 'bg-white', text: 'text-fuchsia-900', border: 'border-fuchsia-300', headerBg: 'bg-gradient-to-r from-green-400 via-fuchsia-500 to-purple-600', headerText: 'text-white', accent: 'bg-fuchsia-100 text-fuchsia-800', decorIcon: '🌌', orb1: 'from-green-300 to-fuchsia-300', orb2: 'from-purple-200 to-fuchsia-200' },
             coral: { id: 'coral', name: 'San Hô', icon: 'fa-fish', bg: 'bg-rose-50', card: 'bg-white', text: 'text-rose-900', border: 'border-rose-200', headerBg: 'bg-gradient-to-r from-orange-400 via-rose-400 to-pink-500', headerText: 'text-white', accent: 'bg-rose-100 text-rose-800', decorIcon: '🪸', orb1: 'from-orange-200 to-rose-300', orb2: 'from-pink-100 to-rose-200' },
             midnight: { id: 'midnight', name: 'Đêm Huyền Bí', icon: 'fa-moon', bg: 'bg-slate-100', card: 'bg-white', text: 'text-slate-800', border: 'border-indigo-300', headerBg: 'bg-gradient-to-r from-slate-900 via-purple-900 to-indigo-900', headerText: 'text-indigo-100', accent: 'bg-indigo-900 text-indigo-100', decorIcon: '🌙', orb1: 'from-purple-500 to-indigo-500', orb2: 'from-slate-600 to-indigo-600' },
@@ -161,7 +160,7 @@
             });
             
             const [expandedInput, setExpandedInput] = useState('rewards'); 
-            const [showSettings, setShowSettings] = useState(false); // Trạng thái đóng/mở khối cài đặt giao diện
+            const [showSettings, setShowSettings] = useState(false);
 
             const [toastMessage, setToastMessage] = useState({ show: false, text: '', type: 'success' });
             const [isExportingImage, setIsExportingImage] = useState(false);
@@ -201,7 +200,6 @@
             const theme = THEMES[currentTheme];
             const CurrentIconPair = ICON_PAIRS[iconPairIndex];
 
-            // Thêm mục Thông báo Phụ huynh vào Accordion
             const INPUT_SECTIONS = [
                 { id: 'rewards', label: 'Góc Tuyên Dương', icon: CurrentIconPair.rClass, border: 'border-amber-200', headerBg: 'bg-amber-50', headerHover: 'hover:bg-amber-100', text: 'text-amber-700', iconColor: 'text-amber-400', ring: 'focus:ring-amber-400', dot: 'bg-amber-500' },
                 { id: 'reminders', label: 'Góc Cố Gắng', icon: CurrentIconPair.mClass, border: 'border-purple-200', headerBg: 'bg-purple-50', headerHover: 'hover:bg-purple-100', text: 'text-purple-700', iconColor: 'text-purple-400', ring: 'focus:ring-purple-400', dot: 'bg-purple-500' },
@@ -453,6 +451,27 @@
                 }
             };
 
+            // ---- HÀM TẠO CANVAS CHUẨN DESKTOP (2K) CHO MỌI THIẾT BỊ ----
+            const getDesktopCanvas = async () => {
+                const element = document.getElementById('preview-card');
+                return await window.html2canvas(element, { 
+                    scale: 3, // 3 * 800 = 2400px (Chuẩn 2K)
+                    useCORS: true, 
+                    backgroundColor: null, 
+                    logging: false,
+                    windowWidth: 1024, // Kích hoạt CSS desktop (md:, lg:) của Tailwind
+                    onclone: (clonedDoc) => {
+                        const clonedElement = clonedDoc.getElementById('preview-card');
+                        if (clonedElement) {
+                            // Ép cứng width chuẩn máy tính, không bị co nhỏ hay rớt dòng
+                            clonedElement.style.width = '800px';
+                            clonedElement.style.maxWidth = '800px';
+                            clonedElement.style.margin = '0 auto';
+                        }
+                    }
+                });
+            };
+
             // ---- XUẤT ẢNH & CHIA SẺ ZALO NATIVE ----
             const downloadFallback = (dataUrl, fileName) => {
                 const link = document.createElement('a');
@@ -463,32 +482,28 @@
 
             const handleExportImage = async () => {
                 setIsExportingImage(true);
-                const element = document.getElementById('preview-card');
                 try {
-                    const canvas = await window.html2canvas(element, { scale: 6, useCORS: true, backgroundColor: null, logging: false });
+                    const canvas = await getDesktopCanvas();
                     const imgData = canvas.toDataURL('image/png', 1.0);
                     const fileName = `ThongBao_${new Date().getTime()}.png`;
                     
                     downloadFallback(imgData, fileName);
-                    showToast('Đã tải ảnh PNG sắc nét về máy!');
+                    showToast('Đã tải ảnh PNG sắc nét (chuẩn 2K) về máy!');
                 } catch (err) { 
                     showToast('Lỗi tạo ảnh. Vui lòng thử lại.', 'error'); 
                 } finally { setIsExportingImage(false); }
             };
 
-            // Chức năng chia sẻ trực tiếp trên điện thoại (Share API)
             const handleShareZalo = async () => {
                 setIsSharingZalo(true);
-                const element = document.getElementById('preview-card');
                 try {
-                    const canvas = await window.html2canvas(element, { scale: 6, useCORS: true, backgroundColor: null, logging: false });
+                    const canvas = await getDesktopCanvas();
                     const imgData = canvas.toDataURL('image/png', 1.0);
                     const fileName = `ThongBao_${new Date().getTime()}.png`;
 
                     try {
                         const blob = await (await fetch(imgData)).blob();
                         const file = new File([blob], fileName, { type: 'image/png' });
-                        // Dùng tính năng Share có sẵn của điện thoại
                         if (navigator.canShare && navigator.canShare({ files: [file] })) {
                             await navigator.share({
                                 files: [file],
@@ -497,7 +512,6 @@
                             });
                             showToast('Đã mở menu chia sẻ! Hãy chọn Zalo để gửi.');
                         } else {
-                            // Nếu dùng trên máy tính không hỗ trợ share native -> Tải ảnh luôn
                             downloadFallback(imgData, fileName);
                             showToast('Máy tính không hỗ trợ chia sẻ trực tiếp. Đã tải ảnh, thầy dán vào Zalo nhé!');
                         }
@@ -514,10 +528,9 @@
 
             const handleExportPDF = async () => {
                 setIsExportingPDF(true);
-                const element = document.getElementById('preview-card');
                 try {
-                    const canvas = await window.html2canvas(element, { scale: 3, useCORS: true });
-                    const imgData = canvas.toDataURL('image/png');
+                    const canvas = await getDesktopCanvas();
+                    const imgData = canvas.toDataURL('image/png', 1.0);
                     const { jsPDF } = window.jspdf;
                     const pdf = new jsPDF('p', 'mm', 'a4');
                     const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -529,9 +542,7 @@
                 finally { setIsExportingPDF(false); }
             };
 
-            // LƯU Ý MỤC TỰ ĐỘNG ẨN: .filter(s => s.data) sẽ tự động loại bỏ các phần không có nội dung
             const renderMainSections = () => {
-                // Class cấu hình riêng cho từng mục để đảm bảo Tailwind luôn nạp đúng màu
                 const colorClasses = {
                     blue: { border: 'border-blue-400', text: 'text-blue-700', bg: 'bg-blue-50/80', borderOuter: 'border-blue-200', textOuter: 'text-blue-800' },
                     emerald: { border: 'border-emerald-400', text: 'text-emerald-700', bg: 'bg-emerald-50/80', borderOuter: 'border-emerald-200', textOuter: 'text-emerald-800' },
@@ -540,13 +551,12 @@
                     pink: { border: 'border-pink-400', text: 'text-pink-700', bg: 'bg-pink-50/80', borderOuter: 'border-pink-200', textOuter: 'text-pink-800' }
                 };
 
-                // Chỉ những mục có dữ liệu (s.data) mới được giữ lại và render
                 const sections = [
                     { id: 'study', title: 'Học tập', icon: 'fa-book-open', data: weekData.study, color: 'blue' },
                     { id: 'discipline', title: 'Nề nếp', icon: 'fa-shield', data: weekData.discipline, color: 'emerald' },
                     { id: 'activity', title: 'Phong trào', icon: 'fa-trophy', data: weekData.activity, color: 'orange' },
                     { id: 'important', title: 'Quan trọng', icon: 'fa-bell', data: weekData.important, color: 'rose' },
-                    { id: 'parents', title: 'Gửi Phụ Huynh', icon: 'fa-hand-holding-heart', data: weekData.parents, color: 'pink' } // Thêm mục phụ huynh
+                    { id: 'parents', title: 'Gửi Phụ Huynh', icon: 'fa-hand-holding-heart', data: weekData.parents, color: 'pink' } 
                 ].filter(s => s.data && s.data.trim() !== '');
 
                 if (sections.length === 0) return null;
@@ -603,7 +613,6 @@
                     );
                 }
 
-                // Default (Classic)
                 return (
                     <div className="space-y-3 mt-3">
                         {sections.map(s => {
